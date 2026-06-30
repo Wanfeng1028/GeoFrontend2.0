@@ -1,7 +1,7 @@
-import { useMemo, type ReactNode } from 'react'
+import { type ReactNode } from 'react'
 import { App as AntdApp, ConfigProvider } from 'antd'
 import zhCN from 'antd/locale/zh_CN'
-import { bootstrapTheme, darkTheme } from './antdThemes'
+import { useAntdTheme } from './themes'
 import { useAppearanceStore } from '../shared/stores/appearanceStore'
 import { useSystemAppearance } from '../shared/hooks/useSystemAppearance'
 
@@ -13,14 +13,10 @@ export function AppProviders({ children }: AppProvidersProps) {
   useSystemAppearance()
 
   const resolvedAppearance = useAppearanceStore((s) => s.resolvedAppearance)
-
-  const antdTheme = useMemo(
-    () => (resolvedAppearance === 'dark' ? darkTheme : bootstrapTheme),
-    [resolvedAppearance],
-  )
+  const themeProps = useAntdTheme(resolvedAppearance)
 
   return (
-    <ConfigProvider locale={zhCN} theme={antdTheme}>
+    <ConfigProvider locale={zhCN} {...themeProps}>
       <AntdApp>{children}</AntdApp>
     </ConfigProvider>
   )
