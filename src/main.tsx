@@ -1,13 +1,13 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import 'antd/dist/reset.css'
-import { App as AntdApp } from 'antd'
+import { AppProviders } from './app/AppProviders'
 import App from './App.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <AntdApp>
+    <AppProviders>
       <App />
-    </AntdApp>
+    </AppProviders>
   </StrictMode>,
 )
