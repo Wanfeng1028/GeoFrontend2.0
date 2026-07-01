@@ -5,6 +5,7 @@ import {
   Card,
   Dropdown,
   Input,
+  Modal,
   Space,
   Steps,
   Tooltip,
@@ -36,21 +37,6 @@ import { ModelPicker } from './components/ModelPicker'
 import styles from './NewTaskPage.module.css'
 
 const { Title, Text } = Typography
-
-/* File System Access API 局部类型声明
- * Web 版通过此 API 请求用户授权选择目录；
- * 绝对路径和更完整的文件系统权限将在 Electron 阶段接入。
- */
-type GeoWorkDirectoryHandle = {
-  kind: 'directory'
-  name: string
-}
-
-type DirectoryPickerWindow = Window & {
-  showDirectoryPicker?: (options?: {
-    mode?: 'read' | 'readwrite'
-  }) => Promise<GeoWorkDirectoryHandle>
-}
 
 const MODE_OPTIONS = [
   { key: 'general', label: '通用 GIS', icon: <GlobalOutlined />, desc: '通用地理信息系统任务' },
@@ -116,6 +102,8 @@ export function NewTaskPage() {
   const [modeDropdownOpen, setModeDropdownOpen] = useState(false)
   const [model, setModel] = useState('Auto')
   const [workDir, setWorkDir] = useState<string | null>(null)
+  const [pathConfirmOpen, setPathConfirmOpen] = useState(false)
+  const [pendingPath, setPendingPath] = useState('')
   const [focused, setFocused] = useState(false)
 
   /* GuidePanel Steps */
@@ -214,24 +202,17 @@ export function NewTaskPage() {
   )
 
   /* 工作目录菜单 */
-  const handlePickDirectory = async () => {
-    const pickerWindow = window as DirectoryPickerWindow
-    if (!pickerWindow.showDirectoryPicker) {
-      message.warning('当前浏览器不支持直接选择文件夹，请使用 Chrome 或 Edge，或等待 Electron 版本接入原生目录选择')
-      return
+  const handlePickDirectory = () => {
+    setPendingPath('')
+    setPathConfirmOpen(true)
+  }
+
+  const handlePathConfirm = () => {
+    if (pendingPath.trim()) {
+      setWorkDir(pendingPath.trim())
+      message.success(`工作目录已设置为：${pendingPath.trim()}`)
     }
-    try {
-      const handle = await pickerWindow.showDirectoryPicker({ mode: 'read' })
-      setWorkDir(handle.name)
-      message.success(`工作目录已设置为：${handle.name}`)
-    } catch (error) {
-      if (error instanceof DOMException && error.name === 'AbortError') {
-        message.info('已取消选择工作目录')
-      } else {
-        console.error(error)
-        message.error('选择工作目录失败，请稍后重试')
-      }
-    }
+    setPathConfirmOpen(false)
   }
 
   const workDirMenu = {
@@ -334,7 +315,7 @@ export function NewTaskPage() {
           <div className={styles.toolbarLeft}>
             <Dropdown menu={attachMenu} trigger={['click']} placement="topLeft">
               <Tooltip title="添加附件">
-                <Button type="dashed" icon={<PlusOutlined />} size="small" className={styles.iconBtn} />
+                <Button color="primary" variant="dashed" icon={<PlusOutlined />} size="small" className={styles.iconBtn} />
               </Tooltip>
             </Dropdown>
 
@@ -345,7 +326,7 @@ export function NewTaskPage() {
               open={modeDropdownOpen}
               onOpenChange={setModeDropdownOpen}
             >
-              <Button type="primary" ghost size="small" className={styles.modeBtn}>
+              <Button color="primary" variant="outlined" size="small" className={styles.modeBtn}>
                 <Space size={4}>
                   <ThunderboltOutlined />
                   {mode}
@@ -359,7 +340,8 @@ export function NewTaskPage() {
 
             <Tooltip title="语音输入">
               <Button
-                type="text"
+                color="green"
+                variant="filled"
                 icon={<AudioOutlined />}
                 className={styles.iconBtn}
                 onClick={() => message.info('语音输入后续接入')}
@@ -367,7 +349,8 @@ export function NewTaskPage() {
             </Tooltip>
 
             <Button
-              type="primary"
+              color="primary"
+              variant="solid"
               shape="circle"
               icon={<SendOutlined />}
               className={styles.iconBtn}
@@ -380,7 +363,7 @@ export function NewTaskPage() {
       {/* ── 工作目录 ── */}
       <div className={styles.workDirRow}>
         <Dropdown menu={workDirMenu} trigger={['click']} placement="bottomLeft" getPopupContainer={() => document.body}>
-          <Button type="default" size="small" icon={<FolderOpenOutlined />}>
+          <Button color="default" variant="outlined" size="small" icon={<FolderOpenOutlined />}>
             选择工作目录
           </Button>
         </Dropdown>
@@ -437,6 +420,26 @@ export function NewTaskPage() {
           </Button>
         </div>
       </Card>
+
+      {/* 路径确认弹窗 */}
+      <Modal
+        title="确认工作目录路径"
+        open={pathConfirmOpen}
+        onOk={handlePathConfirm}
+        onCancel={() => setPathConfirmOpen(false)}
+        okText="确认"
+        cancelText="取消"
+      >
+        <Text type="secondary" style={{ display: 'block', marginBottom: 12, fontSize: 13 }}>
+          浏览器安全限制无法获取完整路径，请手动输入或确认：
+        </Text>
+        <Input
+          value={pendingPath}
+          onChange={(e) => setPendingPath(e.target.value)}
+          placeholder="例如：E:\code\project\setup"
+          onPressEnter={handlePathConfirm}
+        />
+      </Modal>
     </div>
   )
 }
