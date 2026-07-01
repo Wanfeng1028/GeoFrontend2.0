@@ -139,7 +139,7 @@ export function NewTaskPage() {
 
   const handleSend = () => {
     if (!prompt.trim()) {
-      message.warning('请先描述你的 GIS 任务')
+      message.warning('请先描述你的任务')
       return
     }
     message.success('任务已进入前端队列，后续将接入真实执行流程')
@@ -345,8 +345,8 @@ export function NewTaskPage() {
       <Card
         className={styles.guidePanel}
         style={{
-          background: token.colorFillQuaternary,
-          border: `1px solid ${token.colorBorderSecondary}`,
+          background: `linear-gradient(135deg, ${token.colorWarningBg}, ${token.colorWarningBgHover})`,
+          border: `1px solid ${token.colorWarningBorder}`,
         }}
         styles={{ body: { padding: '24px 28px' } }}
         onMouseEnter={() => setGuideHover(true)}
