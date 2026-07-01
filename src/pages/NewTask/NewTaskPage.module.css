@@ -54,37 +54,90 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 10px;
-  gap: 8px;
-  height: 48px;
+  padding: 4px 8px;
+  gap: 6px;
+  height: 36px;
   box-sizing: border-box;
 }
 
 .toolbarLeft {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .toolbarRight {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .iconBtn {
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
 .modeBtn {
-  height: 36px;
+  height: 28px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+/* ── Mode Card Dropdown ── */
+.modeDropdown {
+  width: 260px;
+  padding: 6px;
+  border-radius: 8px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.modeItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s ease;
+}
+
+.modeItemActive {
+  /* active state handled via inline style (token.colorPrimaryBg) */
+}
+
+.modeItemIcon {
+  font-size: 16px;
+  width: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.modeItemContent {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.modeItemLabel {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.modeItemDesc {
+  font-size: 11px;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ── Workspace Directory Row ── */
@@ -98,45 +151,8 @@
   font-size: 13px;
 }
 
-/* ── Guide Panel ── */
-.guidePanel {
-  margin-top: 36px;
-  max-width: 720px;
-  width: 100%;
-  border-radius: 10px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.guidePanel:hover {
-  transform: translateY(-2px);
-}
-
-.guideContent {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 12px;
-}
-
-.guideStepDesc {
-  font-size: 13px;
-  min-height: 40px;
-  max-width: 480px;
-  transition: opacity 0.25s ease;
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .guidePanel {
-    transition: none;
-  }
-  .guidePanel:hover {
-    transform: none;
-  }
   .composer {
-    transition: none;
-  }
-  .guideStepDesc {
     transition: none;
   }
 }

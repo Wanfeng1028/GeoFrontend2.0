@@ -276,7 +276,7 @@ export function NewTaskPage() {
           <div className={styles.toolbarLeft}>
             <Dropdown menu={attachMenu} trigger={['click']} placement="topLeft">
               <Tooltip title="添加附件">
-                <Button color="primary" variant="dashed" icon={<PlusOutlined />} size="small" className={styles.iconBtn} />
+                <Button color="primary" variant="dashed" icon={<PlusOutlined />} size="small" shape="round" className={styles.iconBtn} />
               </Tooltip>
             </Dropdown>
 
@@ -287,7 +287,7 @@ export function NewTaskPage() {
               open={modeDropdownOpen}
               onOpenChange={setModeDropdownOpen}
             >
-              <Button ref={modeBtnRef} color="primary" variant="outlined" size="small" className={styles.modeBtn}>
+              <Button ref={modeBtnRef} color="primary" variant="outlined" size="small" shape="round" className={styles.modeBtn}>
                 <Space size={4}>
                   <ThunderboltOutlined />
                   {mode}
@@ -305,6 +305,7 @@ export function NewTaskPage() {
               <Button
                 color="green"
                 variant="filled"
+                shape="round"
                 icon={<AudioOutlined />}
                 className={styles.iconBtn}
                 onClick={() => message.info('语音输入后续接入')}
