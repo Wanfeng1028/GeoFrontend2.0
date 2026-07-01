@@ -1,0 +1,19 @@
+.userTrigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+
+.userTriggerCollapsed {
+  justify-content: center;
+  padding: 4px 0;
+}
+
+.accountHeader {
+  padding: 8px 12px 12px;
+}

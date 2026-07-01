@@ -16,23 +16,44 @@
 }
 
 .sidebarCollapsed {
-  width: 56px;
-  min-width: 56px;
+  width: 64px;
+  min-width: 64px;
 }
 
+/* Toolbar */
 .sidebarToolbar {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 4px;
   padding: 8px 8px 4px;
-  flex-wrap: wrap;
 }
 
+.sidebarToolbarCollapsed {
+  flex-direction: column;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 2px;
+  padding: 8px 0 4px;
+}
+
+/* Body */
 .sidebarBody {
+  position: relative;
   flex: 1;
   overflow-y: auto;
   min-height: 0;
   padding-block: 4px;
+}
+
+.sidebarBodyCollapsed {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 0;
+  overflow-y: auto;
 }
 
 .sidebarSegmented {
@@ -46,17 +67,22 @@
   padding: 24px 12px;
 }
 
+/* Footer */
 .sidebarFooter {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
+  min-height: 48px;
+  box-sizing: border-box;
 }
 
 .sidebarFooterCollapsed {
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  padding: 8px 4px;
+  padding: 8px 0;
   gap: 4px;
 }
 

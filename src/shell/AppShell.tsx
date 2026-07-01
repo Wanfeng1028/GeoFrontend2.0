@@ -1,23 +1,24 @@
+import type { ReactNode } from 'react'
 import { useState } from 'react'
 import {
   App,
-  Avatar,
+  BorderBeam,
   Button,
+  ConfigProvider,
   Divider,
   Dropdown,
   Empty,
   Menu,
-  Modal,
   Segmented,
   Space,
   Tooltip,
-  Typography,
   theme,
 } from 'antd'
 import {
   PlusOutlined,
   AppstoreOutlined,
   ClockCircleOutlined,
+  UnorderedListOutlined,
   MobileOutlined,
   SearchOutlined,
   MenuFoldOutlined,
@@ -26,23 +27,25 @@ import {
   SunOutlined,
   MoonOutlined,
   DesktopOutlined,
-  UserOutlined,
   SettingOutlined,
   CheckOutlined,
   BarChartOutlined,
-  KeyOutlined,
+  MacCommandOutlined,
   MessageOutlined,
 } from '@ant-design/icons'
 import { Outlet, useLocation, useNavigate } from 'react-router'
 import { useAppearanceStore } from '../shared/stores/appearanceStore'
 import { ShortcutsModal } from './ShortcutsModal'
+import { FeedbackModal } from './FeedbackModal'
+import { UsageModal } from './UsageModal'
+import { UserMenu } from './UserMenu'
 import styles from './AppShell.module.css'
 
 type SidebarSegment = 'tasks' | 'channels'
 
 /* ── 主功能入口数据 ── */
 const navItems = [
-  { key: '/tasks', icon: <PlusOutlined />, label: '新任务' },
+  { key: '/new-task', icon: <PlusOutlined />, label: '新任务' },
   { key: '/agent-studio', icon: <AppstoreOutlined />, label: '扩展' },
   { key: '/tasks', icon: <ClockCircleOutlined />, label: '定时任务' },
   { key: '/data-center', icon: <MobileOutlined />, label: '移动端控制' },
@@ -50,6 +53,7 @@ const navItems = [
 
 /* 路由 → 已在当前页时的提示文案 */
 const alreadyHereMap: Record<string, string> = {
+  '/new-task': '当前已在新任务页面',
   '/tasks': '当前已在任务页面',
   '/agent-studio': '当前已在 Agent Studio',
   '/data-center': '当前已在数据中心',
@@ -69,21 +73,37 @@ export function AppShell() {
     'usage' | 'shortcuts' | 'feedback' | null
   >(null)
 
+  const isLight = appearance === 'light'
+
+  /* BorderBeam 条件包装：仅亮色模式启用流光 */
+  const Beam = ({
+    children,
+    className,
+    style,
+  }: {
+    children: ReactNode
+    className?: string
+    style?: React.CSSProperties
+  }) => {
+    if (!isLight) return <div className={className} style={style}>{children}</div>
+    return (
+      <BorderBeam color={token.colorPrimary} outset={0}>
+        <div className={className} style={style}>
+          {children}
+        </div>
+      </BorderBeam>
+    )
+  }
+
   /* 路由匹配 → nav 选中态 */
   const selectedKey =
     navItems.find((item) => item.key === location.pathname)?.key ?? ''
 
-  /* 菜单项：折叠时隐藏文字，用 Tooltip 包裹 */
+  /* 展开态菜单项 */
   const menuItems = navItems.map((item) => ({
     key: item.key,
     icon: item.icon,
-    label: sidebarCollapsed ? (
-      <Tooltip title={item.label} placement="right">
-        <span />
-      </Tooltip>
-    ) : (
-      item.label
-    ),
+    label: item.label,
   }))
 
   /* 导航点击：已在当前页则提示，否则跳转 */
@@ -93,14 +113,17 @@ export function AppShell() {
     } else {
       navigate(key)
     }
+    if (key === '/data-center') {
+      setSegment('channels')
+    }
   }
 
   /* 创建任务按钮 */
   const handleCreateTask = () => {
-    if (location.pathname === '/tasks') {
-      message.info('当前已在任务页面，后续会接入创建任务弹窗')
+    if (location.pathname === '/new-task') {
+      message.info('当前已在新任务页面')
     } else {
-      navigate('/tasks')
+      navigate('/new-task')
     }
   }
 
@@ -147,6 +170,12 @@ export function AppShell() {
     },
   ]
 
+  /* Divider 公共样式 */
+  const dividerStyle = {
+    margin: '4px 0',
+    borderColor: token.colorBorderSecondary,
+  }
+
   return (
     <div className={styles.root}>
       {/* ── Sidebar ── */}
@@ -158,130 +187,191 @@ export function AppShell() {
         }}
       >
         {/* 顶部工具栏 */}
-        <div className={styles.sidebarToolbar}>
-          <Tooltip title={sidebarCollapsed ? '展开侧栏' : '折叠侧栏'}>
+        <Beam
+          className={`${styles.sidebarToolbar} ${sidebarCollapsed ? styles.sidebarToolbarCollapsed : ''}`}
+        >
+          <Tooltip
+            title={sidebarCollapsed ? '展开侧栏' : '折叠侧栏'}
+            placement={sidebarCollapsed ? 'right' : undefined}
+          >
             <Button
               type="text"
-              icon={sidebarCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-              size="small"
+              icon={
+                sidebarCollapsed ? (
+                  <MenuUnfoldOutlined />
+                ) : (
+                  <MenuFoldOutlined />
+                )
+              }
+              size={sidebarCollapsed ? 'middle' : 'small'}
               onClick={() => setSidebarCollapsed((v) => !v)}
             />
           </Tooltip>
-          <Tooltip title="面板">
-            <Button
-              type="text"
-              icon={<LayoutOutlined />}
-              size="small"
-              onClick={() => message.info('面板切换功能后续接入')}
-            />
-          </Tooltip>
-          <Tooltip title="搜索">
-            <Button
-              type="text"
-              icon={<SearchOutlined />}
-              size="small"
-              onClick={() => message.info('全局搜索功能后续接入')}
-            />
-          </Tooltip>
-          <div style={{ flex: 1 }} />
-          <Tooltip title="用量反馈">
-            <Button
-              type="text"
-              icon={<BarChartOutlined />}
-              size="small"
-              onClick={() => setModalOpen('usage')}
-            />
-          </Tooltip>
-          <Tooltip title="快捷键指引">
-            <Button
-              type="text"
-              icon={<KeyOutlined />}
-              size="small"
-              onClick={() => setModalOpen('shortcuts')}
-            />
-          </Tooltip>
-          <Tooltip title="问题反馈">
-            <Button
-              type="text"
-              icon={<MessageOutlined />}
-              size="small"
-              onClick={() => setModalOpen('feedback')}
-            />
-          </Tooltip>
-        </div>
-
-        {!sidebarCollapsed && <Divider style={{ margin: '4px 0' }} />}
-
-        {/* 主功能入口 */}
-        <div className={styles.sidebarBody}>
-          <Menu
-            mode="inline"
-            selectedKeys={selectedKey ? [selectedKey] : []}
-            items={menuItems}
-            onClick={({ key }) => handleNavClick(key)}
-            style={{ border: 'none', background: 'transparent' }}
-          />
-
           {!sidebarCollapsed && (
             <>
-              <Divider style={{ margin: '4px 0' }} />
+              <Tooltip title="面板">
+                <Button
+                  type="text"
+                  icon={<LayoutOutlined />}
+                  size="small"
+                  onClick={() => message.info('面板切换功能后续接入')}
+                />
+              </Tooltip>
+              <Tooltip title="搜索">
+                <Button
+                  type="text"
+                  icon={<SearchOutlined />}
+                  size="small"
+                  onClick={() => message.info('全局搜索功能后续接入')}
+                />
+              </Tooltip>
+              <div style={{ flex: 1 }} />
+              <Tooltip title="用量反馈">
+                <Button
+                  type="text"
+                  icon={<BarChartOutlined />}
+                  size="small"
+                  onClick={() => setModalOpen('usage')}
+                />
+              </Tooltip>
+              <Tooltip title="快捷键指引">
+                <Button
+                  type="text"
+                  icon={<MacCommandOutlined />}
+                  size="small"
+                  onClick={() => setModalOpen('shortcuts')}
+                />
+              </Tooltip>
+              <Tooltip title="问题反馈">
+                <Button
+                  type="text"
+                  icon={<MessageOutlined />}
+                  size="small"
+                  onClick={() => setModalOpen('feedback')}
+                />
+              </Tooltip>
+            </>
+          )}
+        </Beam>
 
-              {/* 切换区 */}
-              <div className={styles.sidebarSegmented}>
+        {/* Divider 1: 工具区下 */}
+        <Divider style={dividerStyle} />
+
+        {/* 主功能入口 */}
+        {sidebarCollapsed ? (
+          <Beam className={styles.sidebarBodyCollapsed}>
+            {navItems.map((item, idx) => {
+              const isActive = location.pathname === item.key
+              return (
+                <Tooltip key={idx} title={item.label} placement="right">
+                  <Button
+                    type={isActive ? 'primary' : 'text'}
+                    icon={item.icon}
+                    style={{
+                      width: 40,
+                      height: 40,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 18,
+                    }}
+                    onClick={() => handleNavClick(item.key)}
+                  />
+                </Tooltip>
+              )
+            })}
+          </Beam>
+        ) : (
+          <Beam className={styles.sidebarBody}>
+            <Menu
+              mode="inline"
+              selectedKeys={selectedKey ? [selectedKey] : []}
+              items={menuItems}
+              onClick={({ key }) => handleNavClick(key)}
+              style={{ border: 'none', background: 'transparent' }}
+            />
+
+            {/* Segmented 切换区 */}
+            <div className={styles.sidebarSegmented}>
+              <ConfigProvider
+                theme={{
+                  components: {
+                    Segmented: {
+                      itemSelectedColor: token.colorPrimary,
+                      itemSelectedBg: token.colorPrimaryBg,
+                    },
+                  },
+                }}
+              >
                 <Segmented
                   block
                   value={segment}
                   onChange={(value) => setSegment(value as SidebarSegment)}
                   options={[
-                    { label: '任务', value: 'tasks' },
-                    { label: '频道', value: 'channels' },
+                    { label: '任务', value: 'tasks', icon: <UnorderedListOutlined /> },
+                    { label: '移动端控制', value: 'channels', icon: <MobileOutlined /> },
                   ]}
                   size="small"
                 />
-              </div>
+              </ConfigProvider>
+            </div>
 
-              {/* 内容区：空状态占位 */}
-              <div className={styles.sidebarEmpty}>
-                {segment === 'tasks' ? (
-                  <Empty
-                    image={Empty.PRESENTED_IMAGE_SIMPLE}
-                    description="暂无任务"
-                  >
-                    <Button size="small" onClick={handleCreateTask}>
+            {/* 内容区：空状态占位 */}
+            <div className={styles.sidebarEmpty}>
+              {segment === 'tasks' ? (
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description="暂无任务"
+                >
+                  {isLight ? (
+                    <BorderBeam color={token.colorPrimary} outset={0}>
+                      <Button
+                        type="primary"
+                        size="small"
+                        onClick={handleCreateTask}
+                      >
+                        创建任务
+                      </Button>
+                    </BorderBeam>
+                  ) : (
+                    <Button
+                      type="primary"
+                      size="small"
+                      onClick={handleCreateTask}
+                    >
                       创建任务
                     </Button>
-                  </Empty>
-                ) : (
-                  <Empty
-                    image={Empty.PRESENTED_IMAGE_SIMPLE}
-                    description="暂无频道"
-                  />
-                )}
-              </div>
-            </>
-          )}
-        </div>
+                  )}
+                </Empty>
+              ) : (
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description="暂无移动端控制会话"
+                />
+              )}
+            </div>
+          </Beam>
+        )}
 
-        <Divider style={{ margin: 0 }} />
+        {/* Divider 2: 主入口区下 */}
+        <Divider style={dividerStyle} />
 
         {/* 底部 */}
-        <div
+        <Beam
           className={`${styles.sidebarFooter} ${sidebarCollapsed ? styles.sidebarFooterCollapsed : ''}`}
         >
-          <Avatar size="small" icon={<UserOutlined />} />
-          {!sidebarCollapsed && (
-            <Typography.Text
-              ellipsis
-              style={{ flex: 1, color: token.colorText }}
-            >
-              用户
-            </Typography.Text>
-          )}
-          <Tooltip title="设置">
+          <UserMenu
+            collapsed={sidebarCollapsed}
+            onOpenShortcuts={() => setModalOpen('shortcuts')}
+          />
+          <Tooltip
+            title="设置"
+            placement={sidebarCollapsed ? 'right' : undefined}
+          >
             <Button
               type="text"
               icon={<SettingOutlined />}
-              size="small"
+              size={sidebarCollapsed ? 'middle' : 'small'}
               onClick={handleSettingsClick}
             />
           </Tooltip>
@@ -294,11 +384,14 @@ export function AppShell() {
             trigger={['click']}
             placement="topRight"
           >
-            <Tooltip title="切换主题">
-              <Button type="text" icon={<SunOutlined />} size="small" />
+            <Tooltip
+              title="切换主题"
+              placement={sidebarCollapsed ? 'right' : undefined}
+            >
+              <Button type="text" icon={<SunOutlined />} size={sidebarCollapsed ? 'middle' : 'small'} />
             </Tooltip>
           </Dropdown>
-        </div>
+        </Beam>
       </aside>
 
       {/* ── MainWorkspace ── */}
@@ -313,32 +406,20 @@ export function AppShell() {
       </main>
 
       {/* ── 工具弹窗 ── */}
-      <Modal
-        title="用量反馈"
+      <UsageModal
         open={modalOpen === 'usage'}
-        onCancel={() => setModalOpen(null)}
-        footer={null}
-      >
-        <Typography.Paragraph>
-          用量统计功能后续接入。
-        </Typography.Paragraph>
-      </Modal>
+        onClose={() => setModalOpen(null)}
+      />
 
       <ShortcutsModal
         open={modalOpen === 'shortcuts'}
         onClose={() => setModalOpen(null)}
       />
 
-      <Modal
-        title="问题反馈"
+      <FeedbackModal
         open={modalOpen === 'feedback'}
-        onCancel={() => setModalOpen(null)}
-        footer={null}
-      >
-        <Typography.Paragraph>
-          反馈表单后续接入。
-        </Typography.Paragraph>
-      </Modal>
+        onClose={() => setModalOpen(null)}
+      />
     </div>
   )
 }

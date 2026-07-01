@@ -7,12 +7,14 @@ import { TasksPage } from '../pages/Tasks/TasksPage'
 import { SettingsPage } from '../pages/Settings/SettingsPage'
 import { AgentStudioPage } from '../pages/AgentStudio/AgentStudioPage'
 import { ThemePreviewPage } from '../pages/ThemePreview/ThemePreviewPage'
+import { NewTaskPage } from '../pages/NewTask/NewTaskPage'
 
 export const router = createBrowserRouter([
   {
     element: <AppShell />,
     children: [
       { index: true, element: <DashboardPage /> },
+      { path: 'new-task', element: <NewTaskPage /> },
       { path: 'workspace', element: <WorkspacePage /> },
       { path: 'data-center', element: <DataCenterPage /> },
       { path: 'tasks', element: <TasksPage /> },
