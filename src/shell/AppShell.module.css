@@ -27,7 +27,14 @@
   align-items: center;
   gap: 2px;
   padding: 6px 6px 2px;
-  font-size: 12px;
+}
+
+.sidebarToolbar :global(.ant-btn-sm) {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  padding-inline: 0;
+  font-size: 11px;
 }
 
 .sidebarToolbarCollapsed {
