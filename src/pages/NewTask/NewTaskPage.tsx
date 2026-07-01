@@ -1,14 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import {
   App,
   Button,
-  Card,
   Dropdown,
   Input,
-  Modal,
   Space,
-  Steps,
   Tooltip,
+  Tour,
   Typography,
   theme,
 } from 'antd'
@@ -23,20 +21,32 @@ import {
   RobotOutlined,
   CloudUploadOutlined,
   FolderOutlined,
-  RocketOutlined,
-  DatabaseOutlined,
-  EnvironmentOutlined,
-  BarChartOutlined,
-  FileTextOutlined,
   AimOutlined,
   PieChartOutlined,
+  FileTextOutlined,
   SearchOutlined,
   RadarChartOutlined,
 } from '@ant-design/icons'
 import { ModelPicker } from './components/ModelPicker'
+import { WorkflowGuideCard } from './components/WorkflowGuideCard'
 import styles from './NewTaskPage.module.css'
 
 const { Title, Text } = Typography
+
+/* File System Access API 局部类型声明
+ * Web 版通过此 API 请求用户授权选择目录；
+ * 绝对路径和更完整的文件系统权限将在 Electron 阶段接入。
+ */
+type GeoWorkDirectoryHandle = {
+  kind: 'directory'
+  name: string
+}
+
+type DirectoryPickerWindow = Window & {
+  showDirectoryPicker?: (options?: {
+    mode?: 'read' | 'readwrite'
+  }) => Promise<GeoWorkDirectoryHandle>
+}
 
 const MODE_OPTIONS = [
   { key: 'general', label: '通用 GIS', icon: <GlobalOutlined />, desc: '通用地理信息系统任务' },
@@ -56,83 +66,25 @@ const ATTACH_ITEMS = [
   { key: 'image', icon: <FolderOpenOutlined />, label: '上传图片', msg: '图片上传后续接入' },
 ]
 
-const WORKFLOW_STEPS = [
-  {
-    title: '导入空间数据',
-    icon: <DatabaseOutlined />,
-    desc: '选择 GeoJSON、Shapefile、栅格影像或示例数据作为分析输入。',
-  },
-  {
-    title: '预览地图图层',
-    icon: <EnvironmentOutlined />,
-    desc: '在地图工作区查看图层范围、属性字段和坐标系统。',
-  },
-  {
-    title: '运行空间分析',
-    icon: <BarChartOutlined />,
-    desc: '执行缓冲区、叠加分析、遥感指数或空间查询任务。',
-  },
-  {
-    title: '生成报告',
-    icon: <FileTextOutlined />,
-    desc: '导出分析结果、地图截图、过程记录和可追溯报告。',
-  },
-]
-
-/* 检测 prefers-reduced-motion */
-function useReducedMotion() {
-  const [reduced, setReduced] = useState(false)
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-    setReduced(mq.matches)
-    const handler = (e: MediaQueryListEvent) => setReduced(e.matches)
-    mq.addEventListener('change', handler)
-    return () => mq.removeEventListener('change', handler)
-  }, [])
-  return reduced
-}
-
 export function NewTaskPage() {
   const { message } = App.useApp()
   const { token } = theme.useToken()
-  const reducedMotion = useReducedMotion()
 
   const [prompt, setPrompt] = useState('')
   const [mode, setMode] = useState('通用 GIS')
   const [modeDropdownOpen, setModeDropdownOpen] = useState(false)
   const [model, setModel] = useState('Auto')
   const [workDir, setWorkDir] = useState<string | null>(null)
-  const [pathConfirmOpen, setPathConfirmOpen] = useState(false)
-  const [pendingPath, setPendingPath] = useState('')
   const [focused, setFocused] = useState(false)
 
-  /* GuidePanel Steps */
-  const [activeStep, setActiveStep] = useState(0)
-  const [guideHover, setGuideHover] = useState(false)
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
-  const startAutoStep = useCallback(() => {
-    if (reducedMotion) return
-    intervalRef.current = setInterval(() => {
-      setActiveStep((prev) => (prev + 1) % WORKFLOW_STEPS.length)
-    }, 1800)
-  }, [reducedMotion])
-
-  const stopAutoStep = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current)
-      intervalRef.current = null
-    }
-  }, [])
-
-  useEffect(() => {
-    if (!guideHover) {
-      startAutoStep()
-    } else {
-      stopAutoStep()
-    }
-    return stopAutoStep
-  }, [guideHover, startAutoStep, stopAutoStep])
+  /* Tour */
+  const [tourOpen, setTourOpen] = useState(false)
+  const composerRef = useRef<HTMLDivElement>(null)
+  const toolbarRef = useRef<HTMLDivElement>(null)
+  const modeBtnRef = useRef<HTMLButtonElement>(null)
+  const modelPickerRef = useRef<HTMLDivElement>(null)
+  const workDirRef = useRef<HTMLDivElement>(null)
+  const guideCardRef = useRef<HTMLDivElement>(null)
 
   const handleSend = () => {
     if (!prompt.trim()) {
@@ -202,17 +154,24 @@ export function NewTaskPage() {
   )
 
   /* 工作目录菜单 */
-  const handlePickDirectory = () => {
-    setPendingPath('')
-    setPathConfirmOpen(true)
-  }
-
-  const handlePathConfirm = () => {
-    if (pendingPath.trim()) {
-      setWorkDir(pendingPath.trim())
-      message.success(`工作目录已设置为：${pendingPath.trim()}`)
+  const handlePickDirectory = async () => {
+    const pickerWindow = window as DirectoryPickerWindow
+    if (!pickerWindow.showDirectoryPicker) {
+      message.warning('当前浏览器不支持直接选择文件夹，请使用 Chrome 或 Edge，或等待 Electron 版本接入原生目录选择')
+      return
     }
-    setPathConfirmOpen(false)
+    try {
+      const handle = await pickerWindow.showDirectoryPicker({ mode: 'read' })
+      setWorkDir(handle.name)
+      message.success(`工作目录已设置为：${handle.name}`)
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        message.info('已取消选择工作目录')
+      } else {
+        console.error(error)
+        message.error('选择工作目录失败，请稍后重试')
+      }
+    }
   }
 
   const workDirMenu = {
@@ -285,6 +244,7 @@ export function NewTaskPage() {
 
       {/* ── Composer ── */}
       <div
+        ref={composerRef}
         className={styles.composer}
         style={{
           background: token.colorBgContainer,
@@ -309,6 +269,7 @@ export function NewTaskPage() {
 
         {/* 工具栏 */}
         <div
+          ref={toolbarRef}
           className={styles.toolbar}
           style={{ borderTop: `1px solid ${token.colorBorderSecondary}` }}
         >
@@ -326,7 +287,7 @@ export function NewTaskPage() {
               open={modeDropdownOpen}
               onOpenChange={setModeDropdownOpen}
             >
-              <Button color="primary" variant="outlined" size="small" className={styles.modeBtn}>
+              <Button ref={modeBtnRef} color="primary" variant="outlined" size="small" className={styles.modeBtn}>
                 <Space size={4}>
                   <ThunderboltOutlined />
                   {mode}
@@ -336,7 +297,9 @@ export function NewTaskPage() {
           </div>
 
           <div className={styles.toolbarRight}>
-            <ModelPicker model={model} onModelChange={setModel} />
+            <div ref={modelPickerRef}>
+              <ModelPicker model={model} onModelChange={setModel} />
+            </div>
 
             <Tooltip title="语音输入">
               <Button
@@ -361,7 +324,7 @@ export function NewTaskPage() {
       </div>
 
       {/* ── 工作目录 ── */}
-      <div className={styles.workDirRow}>
+      <div ref={workDirRef} className={styles.workDirRow}>
         <Dropdown menu={workDirMenu} trigger={['click']} placement="bottomLeft" getPopupContainer={() => document.body}>
           <Button color="default" variant="outlined" size="small" icon={<FolderOpenOutlined />}>
             选择工作目录
@@ -372,74 +335,54 @@ export function NewTaskPage() {
         </Text>
       </div>
 
-      {/* ── 引导模块 ── */}
-      <Card
-        className={styles.guidePanel}
-        style={{
-          background: `linear-gradient(135deg, ${token.colorWarningBg}, ${token.colorWarningBgHover})`,
-          border: `1px solid ${token.colorWarningBorder}`,
-        }}
-        styles={{ body: { padding: '24px 28px' } }}
-        onMouseEnter={() => setGuideHover(true)}
-        onMouseLeave={() => setGuideHover(false)}
-      >
-        <div className={styles.guideContent}>
-          <Space align="center">
-            <RocketOutlined style={{ color: token.colorPrimary, fontSize: 18 }} />
-            <Text strong style={{ fontSize: 16 }}>从一个空间问题开始</Text>
-          </Space>
-          <Text type="secondary" style={{ fontSize: 13, maxWidth: 480 }}>
-            导入数据、选择工具、运行分析并导出报告。GeoWork 会把每一步记录为可追溯的工作流。
-          </Text>
+      {/* ── 引导卡片 ── */}
+      <div ref={guideCardRef} style={{ marginTop: 48 }}>
+        <WorkflowGuideCard onStartTour={() => setTourOpen(true)} />
+      </div>
 
-          <Steps
-            current={activeStep}
-            onChange={(idx) => setActiveStep(idx)}
-            size="small"
-            style={{ maxWidth: 600, width: '100%' }}
-            items={WORKFLOW_STEPS.map((s) => ({
-              title: s.title,
-              icon: s.icon,
-            }))}
-          />
-
-          <Text
-            type="secondary"
-            className={styles.guideStepDesc}
-            style={{ opacity: 1 }}
-          >
-            {WORKFLOW_STEPS[activeStep].desc}
-          </Text>
-
-          <Button
-            type="default"
-            size="middle"
-            onClick={() => message.info('工作流示例后续接入')}
-          >
-            查看工作流示例
-          </Button>
-        </div>
-      </Card>
-
-      {/* 路径确认弹窗 */}
-      <Modal
-        title="确认工作目录路径"
-        open={pathConfirmOpen}
-        onOk={handlePathConfirm}
-        onCancel={() => setPathConfirmOpen(false)}
-        okText="确认"
-        cancelText="取消"
-      >
-        <Text type="secondary" style={{ display: 'block', marginBottom: 12, fontSize: 13 }}>
-          浏览器安全限制无法获取完整路径，请手动输入或确认：
-        </Text>
-        <Input
-          value={pendingPath}
-          onChange={(e) => setPendingPath(e.target.value)}
-          placeholder="例如：E:\code\project\setup"
-          onPressEnter={handlePathConfirm}
-        />
-      </Modal>
+      {/* ── 漫游式引导 ── */}
+      <Tour
+        open={tourOpen}
+        onClose={() => setTourOpen(false)}
+        steps={[
+          {
+            target: () => composerRef.current!,
+            title: '输入任务描述',
+            description: '在这里用自然语言描述您的 GIS 任务，例如缓冲区分析、专题制图等。',
+            placement: 'bottom',
+          },
+          {
+            target: () => toolbarRef.current!,
+            title: '工具栏',
+            description: '添加附件、切换模式、选择模型、语音输入和发送任务。',
+            placement: 'bottom',
+          },
+          {
+            target: () => modeBtnRef.current!,
+            title: '任务模式',
+            description: '选择不同的任务模式：通用 GIS、空间分析、专题制图等。',
+            placement: 'bottom',
+          },
+          {
+            target: () => modelPickerRef.current!,
+            title: '模型选择',
+            description: '选择 AI 模型来处理您的任务。',
+            placement: 'top',
+          },
+          {
+            target: () => workDirRef.current!,
+            title: '工作目录',
+            description: '选择本地工作目录，用于存放分析数据和输出文件。',
+            placement: 'bottom',
+          },
+          {
+            target: () => guideCardRef.current!,
+            title: '工作流引导',
+            description: '从这里开始您的空间分析工作流，随时可以点击"开始引导"重新查看。',
+            placement: 'top',
+          },
+        ]}
+      />
     </div>
   )
 }
