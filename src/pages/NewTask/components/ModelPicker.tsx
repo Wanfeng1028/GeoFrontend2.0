@@ -15,12 +15,6 @@ import {
 import {
   CheckOutlined,
   ThunderboltOutlined,
-  RocketOutlined,
-  GlobalOutlined,
-  HighlightOutlined,
-  LineChartOutlined,
-  FileTextOutlined,
-  RobotOutlined,
   SettingOutlined,
 } from '@ant-design/icons'
 import styles from './ModelPicker.module.css'
@@ -38,12 +32,12 @@ interface ModelOption {
 
 const MODELS: ModelOption[] = [
   { key: 'auto', name: 'Auto', icon: <ThunderboltOutlined />, tag: '推荐', tagColor: 'blue', rate: '0.5x' },
-  { key: 'qwen-gis', name: 'Qwen GIS Assistant', icon: <RobotOutlined />, tag: 'Beta', tagColor: 'orange', rate: '0.25x' },
-  { key: 'geowork-planner', name: 'GeoWork Planner', icon: <RocketOutlined />, rate: '0.5x' },
-  { key: 'rs-helper', name: 'Remote Sensing Helper', icon: <GlobalOutlined />, rate: '0.3x' },
-  { key: 'cartography-expert', name: 'Cartography Expert', icon: <HighlightOutlined />, rate: '0.4x' },
-  { key: 'spatial-expert', name: 'Spatial Analysis Expert', icon: <LineChartOutlined />, tag: 'Beta', tagColor: 'orange', rate: '0.4x' },
-  { key: 'paper-assistant', name: 'Paper Writing Assistant', icon: <FileTextOutlined />, rate: '0.3x' },
+  { key: 'qwen37-max', name: 'Qwen3.7-Max', icon: <ThunderboltOutlined />, rate: '0.25x' },
+  { key: 'qwen37-plus', name: 'Qwen3.7-Plus', icon: <ThunderboltOutlined />, rate: '0.1x' },
+  { key: 'qwen36-flash', name: 'Qwen3.6-Flash', icon: <ThunderboltOutlined />, rate: '0.1x' },
+  { key: 'deepseek-v4-pro', name: 'DeepSeek-V4-Pro', icon: <ThunderboltOutlined />, rate: '0.5x' },
+  { key: 'deepseek-v4-flash', name: 'DeepSeek-V4-Flash', icon: <ThunderboltOutlined />, rate: '0.1x' },
+  { key: 'glm-52', name: 'GLM-5.2', icon: <ThunderboltOutlined />, rate: '0.6x' },
 ]
 
 interface ModelPickerProps {
@@ -60,11 +54,12 @@ export function ModelPicker({ model, onModelChange }: ModelPickerProps) {
 
   /* 模型设置状态 */
   const [modelSettings, setModelSettings] = useState<Record<string, { enabled: boolean; contextLen: number }>>({
-    auto: { enabled: true, contextLen: 128000 },
-    'qwen-gis': { enabled: true, contextLen: 32000 },
-    'geowork-planner': { enabled: true, contextLen: 64000 },
-    'rs-helper': { enabled: true, contextLen: 64000 },
-    'cartography-expert': { enabled: true, contextLen: 64000 },
+    'qwen37-max': { enabled: true, contextLen: 32000 },
+    'qwen37-plus': { enabled: true, contextLen: 128000 },
+    'qwen36-flash': { enabled: true, contextLen: 128000 },
+    'deepseek-v4-pro': { enabled: true, contextLen: 64000 },
+    'deepseek-v4-flash': { enabled: true, contextLen: 64000 },
+    'glm-52': { enabled: true, contextLen: 128000 },
   })
 
   const handleSettingsSave = () => {
@@ -159,7 +154,7 @@ export function ModelPicker({ model, onModelChange }: ModelPickerProps) {
       >
         <Button type="text" size="middle" className={styles.modelButton}>
           <Space size={4}>
-            <RobotOutlined />
+            <ThunderboltOutlined />
             {model}
           </Space>
         </Button>
