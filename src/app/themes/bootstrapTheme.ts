@@ -87,7 +87,12 @@ export function useBootstrapTheme(): ConfigProviderProps {
         token: {
           borderRadius: 4,
           borderRadiusLG: 6,
-          colorInfo: '#3a87ad',
+          colorPrimary: '#2F80ED',
+          colorInfo: '#2F80ED',
+          colorBgLayout: '#EEF4F7',
+          colorBgContainer: '#F7FBFD',
+          colorBgElevated: '#F7FBFD',
+          colorBorderSecondary: '#C8D7E2',
         },
         components: {
           Tooltip: { fontSize: 12 },
