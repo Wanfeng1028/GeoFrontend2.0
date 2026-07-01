@@ -27,6 +27,10 @@ import {
   EnvironmentOutlined,
   BarChartOutlined,
   FileTextOutlined,
+  AimOutlined,
+  PieChartOutlined,
+  SearchOutlined,
+  RadarChartOutlined,
 } from '@ant-design/icons'
 import { ModelPicker } from './components/ModelPicker'
 import styles from './NewTaskPage.module.css'
@@ -49,12 +53,12 @@ type DirectoryPickerWindow = Window & {
 }
 
 const MODE_OPTIONS = [
-  { key: 'general', label: '通用 GIS' },
-  { key: 'spatial', label: '空间分析' },
-  { key: 'cartography', label: '专题制图' },
-  { key: 'paper', label: '论文辅助' },
-  { key: 'query', label: '数据查询' },
-  { key: 'remote-sensing', label: '遥感解译' },
+  { key: 'general', label: '通用 GIS', icon: <GlobalOutlined />, desc: '通用地理信息系统任务' },
+  { key: 'spatial', label: '空间分析', icon: <AimOutlined />, desc: '缓冲区、叠加、空间查询' },
+  { key: 'cartography', label: '专题制图', icon: <PieChartOutlined />, desc: '生成专题地图和可视化' },
+  { key: 'paper', label: '论文辅助', icon: <FileTextOutlined />, desc: '学术论文写作辅助' },
+  { key: 'query', label: '数据查询', icon: <SearchOutlined />, desc: '属性与空间数据检索' },
+  { key: 'remote-sensing', label: '遥感解译', icon: <RadarChartOutlined />, desc: '遥感影像处理与解译' },
 ]
 
 const ATTACH_ITEMS = [
@@ -109,6 +113,7 @@ export function NewTaskPage() {
 
   const [prompt, setPrompt] = useState('')
   const [mode, setMode] = useState('通用 GIS')
+  const [modeDropdownOpen, setModeDropdownOpen] = useState(false)
   const [model, setModel] = useState('Auto')
   const [workDir, setWorkDir] = useState<string | null>(null)
   const [focused, setFocused] = useState(false)
@@ -166,22 +171,47 @@ export function NewTaskPage() {
     })),
   }
 
-  /* 模式菜单 */
-  const modeMenu = {
-    items: MODE_OPTIONS.map((opt) => ({
-      key: opt.key,
-      label: (
-        <Space>
-          {opt.label}
-          {mode === opt.label && <CheckOutlined />}
-        </Space>
-      ),
-      onClick: () => {
-        setMode(opt.label)
-        message.info(`已切换到：${opt.label}`)
-      },
-    })),
-  }
+  /* 模式下拉 - 卡片风格 */
+  const modeDropdownRender = () => (
+    <div
+      className={styles.modeDropdown}
+      style={{
+        background: token.colorBgElevated,
+        border: `1px solid ${token.colorBorderSecondary}`,
+      }}
+    >
+      {MODE_OPTIONS.map((opt) => {
+        const isActive = mode === opt.label
+        return (
+          <div
+            key={opt.key}
+            className={`${styles.modeItem} ${isActive ? styles.modeItemActive : ''}`}
+            style={isActive ? { background: token.colorPrimaryBg } : undefined}
+            onMouseEnter={(e) => {
+              if (!isActive) e.currentTarget.style.background = token.colorFillSecondary
+            }}
+            onMouseLeave={(e) => {
+              if (!isActive) e.currentTarget.style.background = 'transparent'
+            }}
+            onClick={() => {
+              setMode(opt.label)
+              setModeDropdownOpen(false)
+              message.info(`已切换到：${opt.label}`)
+            }}
+          >
+            <span className={styles.modeItemIcon} style={{ color: isActive ? token.colorPrimary : token.colorTextSecondary }}>
+              {opt.icon}
+            </span>
+            <div className={styles.modeItemContent}>
+              <span className={styles.modeItemLabel}>{opt.label}</span>
+              <span className={styles.modeItemDesc} style={{ color: token.colorTextTertiary }}>{opt.desc}</span>
+            </div>
+            {isActive && <CheckOutlined style={{ color: token.colorPrimary, fontSize: 12 }} />}
+          </div>
+        )
+      })}
+    </div>
+  )
 
   /* 工作目录菜单 */
   const handlePickDirectory = async () => {
@@ -224,18 +254,18 @@ export function NewTaskPage() {
         children: [
           {
             key: 'geo-frontend',
-            label: 'GeoFrontend2.0',
+            label: 'E:\\code\\javascript\\project\\GeoFrontend2.0',
             onClick: () => {
-              setWorkDir('GeoFrontend2.0')
-              message.success('工作目录已设置为：GeoFrontend2.0')
+              setWorkDir('E:\\code\\javascript\\project\\GeoFrontend2.0')
+              message.success('工作目录已设置为：E:\\code\\javascript\\project\\GeoFrontend2.0')
             },
           },
           {
             key: 'geowork',
-            label: 'GeoWork',
+            label: 'E:\\code\\javascript\\project\\GeoWork',
             onClick: () => {
-              setWorkDir('GeoWork')
-              message.success('工作目录已设置为：GeoWork')
+              setWorkDir('E:\\code\\javascript\\project\\GeoWork')
+              message.success('工作目录已设置为：E:\\code\\javascript\\project\\GeoWork')
             },
           },
         ],
@@ -304,12 +334,18 @@ export function NewTaskPage() {
           <div className={styles.toolbarLeft}>
             <Dropdown menu={attachMenu} trigger={['click']} placement="topLeft">
               <Tooltip title="添加附件">
-                <Button type="text" icon={<PlusOutlined />} className={styles.iconBtn} />
+                <Button type="dashed" icon={<PlusOutlined />} size="small" className={styles.iconBtn} />
               </Tooltip>
             </Dropdown>
 
-            <Dropdown menu={modeMenu} trigger={['click']} placement="topLeft">
-              <Button type="primary" ghost size="middle" className={styles.modeBtn}>
+            <Dropdown
+              dropdownRender={modeDropdownRender}
+              trigger={['click']}
+              placement="topLeft"
+              open={modeDropdownOpen}
+              onOpenChange={setModeDropdownOpen}
+            >
+              <Button type="primary" ghost size="small" className={styles.modeBtn}>
                 <Space size={4}>
                   <ThunderboltOutlined />
                   {mode}
@@ -344,7 +380,7 @@ export function NewTaskPage() {
       {/* ── 工作目录 ── */}
       <div className={styles.workDirRow}>
         <Dropdown menu={workDirMenu} trigger={['click']} placement="bottomLeft" getPopupContainer={() => document.body}>
-          <Button type="text" size="small" icon={<FolderOpenOutlined />}>
+          <Button type="default" size="small" icon={<FolderOpenOutlined />}>
             选择工作目录
           </Button>
         </Dropdown>
@@ -393,7 +429,7 @@ export function NewTaskPage() {
           </Text>
 
           <Button
-            type="primary"
+            type="default"
             size="middle"
             onClick={() => message.info('工作流示例后续接入')}
           >
