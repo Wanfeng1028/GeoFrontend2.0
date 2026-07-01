@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   App,
   BorderBeam,
@@ -32,6 +32,12 @@ import {
   BarChartOutlined,
   MacCommandOutlined,
   MessageOutlined,
+  DownOutlined,
+  RightOutlined,
+  UserSwitchOutlined,
+  ToolOutlined,
+  ApiOutlined,
+  LinkOutlined,
 } from '@ant-design/icons'
 import { Outlet, useLocation, useNavigate } from 'react-router'
 import { useAppearanceStore } from '../shared/stores/appearanceStore'
@@ -61,11 +67,13 @@ const alreadyHereMap: Record<string, string> = {
 
 /* 扩展子项数据 */
 const extChildren = [
-  { key: 'expert', label: '专家', msg: '专家模式后续接入' },
-  { key: 'skill', label: '技能', msg: '技能市场后续接入' },
-  { key: 'mcp', label: 'MCP', msg: 'MCP 工具连接后续接入' },
-  { key: 'connector', label: '连接器', msg: '连接器管理后续接入' },
+  { key: 'experts', label: '专家', icon: <UserSwitchOutlined />, route: '/extensions/experts' },
+  { key: 'skills', label: '技能', icon: <ToolOutlined />, route: '/extensions/skills' },
+  { key: 'mcp', label: 'MCP', icon: <ApiOutlined />, route: '/extensions/mcp' },
+  { key: 'connectors', label: '连接器', icon: <LinkOutlined />, route: '/extensions/connectors' },
 ]
+
+const extRoutes = extChildren.map((c) => c.route)
 
 export function AppShell() {
   const navigate = useNavigate()
@@ -80,6 +88,14 @@ export function AppShell() {
     'usage' | 'shortcuts' | 'feedback' | null
   >(null)
   const [extOpen, setExtOpen] = useState(false)
+  const [extHeaderHover, setExtHeaderHover] = useState(false)
+
+  const isOnExtension = extRoutes.includes(location.pathname)
+
+  /* 路由在扩展子页面时自动展开 */
+  useEffect(() => {
+    if (isOnExtension) setExtOpen(true)
+  }, [isOnExtension])
 
   const isLight = appearance === 'light'
 
@@ -297,14 +313,15 @@ export function AppShell() {
               menu={{
                 items: extChildren.map((item) => ({
                   key: item.key,
+                  icon: item.icon,
                   label: item.label,
-                  onClick: () => message.info(item.msg),
+                  onClick: () => navigate(item.route),
                 })),
               }}
             >
               <Tooltip title="扩展" placement="right">
                 <Button
-                  type={location.pathname === '/agent-studio' ? 'primary' : 'text'}
+                  type={isOnExtension ? 'primary' : 'text'}
                   icon={<AppstoreOutlined />}
                   style={{
                     width: 40,
@@ -313,13 +330,6 @@ export function AppShell() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontSize: 18,
-                  }}
-                  onClick={() => {
-                    if (location.pathname === '/agent-studio') {
-                      message.info('当前已在 Agent Studio')
-                    } else {
-                      navigate('/agent-studio')
-                    }
                   }}
                 />
               </Tooltip>
@@ -335,49 +345,58 @@ export function AppShell() {
               style={{ border: 'none', background: 'transparent' }}
             />
 
-            {/* 扩展入口 - 展开态 hover */}
+            {/* 扩展入口 - 展开态 click */}
             <div
               className={styles.extensionBlock}
-              onMouseEnter={() => setExtOpen(true)}
-              onMouseLeave={() => setExtOpen(false)}
+              onMouseEnter={() => setExtHeaderHover(true)}
+              onMouseLeave={() => setExtHeaderHover(false)}
             >
               <div
                 className={styles.extensionHeader}
                 style={{
-                  background: extOpen ? token.colorFillSecondary : 'transparent',
+                  background: extOpen || extHeaderHover ? token.colorFillSecondary : 'transparent',
                   paddingInline: 16,
                   marginInline: 12,
                 }}
-                onClick={() => {
-                  if (location.pathname === '/agent-studio') {
-                    message.info('当前已在 Agent Studio')
-                  } else {
-                    navigate('/agent-studio')
-                  }
-                }}
+                onClick={() => setExtOpen((v) => !v)}
               >
                 <AppstoreOutlined />
                 <span style={{ flex: 1 }}>扩展</span>
+                {(extOpen || extHeaderHover) && (
+                  <span style={{ fontSize: 10, color: token.colorTextTertiary }}>
+                    {extOpen ? <DownOutlined /> : <RightOutlined />}
+                  </span>
+                )}
               </div>
               {extOpen && (
                 <div className={styles.extensionChildren}>
-                  {extChildren.map((item) => (
-                    <button
-                      key={item.key}
-                      type="button"
-                      role="menuitem"
-                      className={styles.extensionChildRow}
-                      onClick={() => message.info(item.msg)}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = token.colorFillSecondary
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'transparent'
-                      }}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
+                  {extChildren.map((item) => {
+                    const isActive = location.pathname === item.route
+                    return (
+                      <button
+                        key={item.key}
+                        type="button"
+                        role="menuitem"
+                        className={styles.extensionChildRow}
+                        style={{
+                          color: isActive ? token.colorPrimary : token.colorText,
+                          fontWeight: isActive ? 500 : 400,
+                        }}
+                        onClick={() => navigate(item.route)}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = token.colorFillSecondary
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'transparent'
+                        }}
+                      >
+                        <span style={{ marginRight: 8, fontSize: 14, display: 'inline-flex' }}>
+                          {item.icon}
+                        </span>
+                        {item.label}
+                      </button>
+                    )
+                  })}
                 </div>
               )}
             </div>

@@ -8,6 +8,10 @@ import { SettingsPage } from '../pages/Settings/SettingsPage'
 import { AgentStudioPage } from '../pages/AgentStudio/AgentStudioPage'
 import { ThemePreviewPage } from '../pages/ThemePreview/ThemePreviewPage'
 import { NewTaskPage } from '../pages/NewTask/NewTaskPage'
+import { ExpertsPage } from '../pages/Extensions/ExpertsPage'
+import { SkillsPage } from '../pages/Extensions/SkillsPage'
+import { McpPage } from '../pages/Extensions/McpPage'
+import { ConnectorsPage } from '../pages/Extensions/ConnectorsPage'
 
 export const router = createBrowserRouter([
   {
@@ -20,6 +24,10 @@ export const router = createBrowserRouter([
       { path: 'tasks', element: <TasksPage /> },
       { path: 'settings', element: <SettingsPage /> },
       { path: 'agent-studio', element: <AgentStudioPage /> },
+      { path: 'extensions/experts', element: <ExpertsPage /> },
+      { path: 'extensions/skills', element: <SkillsPage /> },
+      { path: 'extensions/mcp', element: <McpPage /> },
+      { path: 'extensions/connectors', element: <ConnectorsPage /> },
       { path: 'theme-preview', element: <ThemePreviewPage /> },
     ],
   },
