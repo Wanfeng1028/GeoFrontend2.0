@@ -1,20 +1,22 @@
-import { Alert, Card, Space, Typography } from 'antd'
+import { Card, Space, Typography, Empty } from 'antd'
+import { MobileOutlined } from '@ant-design/icons'
 
 const { Title, Text } = Typography
 
 export function DashboardPage() {
   return (
-    <div style={{ maxWidth: 600, margin: '80px auto', padding: '0 24px' }}>
-      <Space direction="vertical" size="large" style={{ width: '100%' }}>
-        <Title level={2}>Dashboard</Title>
-        <Text type="secondary">工作区概览、任务趋势、数据资产统计</Text>
+    <Space direction="vertical" size="large" style={{ width: '100%' }}>
+      <div>
+        <Title level={2} style={{ margin: 0 }}>
+          <MobileOutlined style={{ marginRight: 8 }} />
+          移动端控制
+        </Title>
+        <Text type="secondary">管理已连接的移动设备，远程操控与任务下发</Text>
+      </div>
 
-        <Card title="当前阶段">
-          <Text>路由占位 — 等待 AppShell 和业务内容接入</Text>
-        </Card>
-
-        <Alert type="info" showIcon message="此页面为路由占位，尚未接入真实业务数据。" />
-      </Space>
-    </div>
+      <Card>
+        <Empty description="暂无已连接设备，接入设备后将在此显示" />
+      </Card>
+    </Space>
   )
 }
