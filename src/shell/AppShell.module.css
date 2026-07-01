@@ -25,8 +25,9 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 8px 8px 4px;
+  gap: 2px;
+  padding: 6px 6px 2px;
+  font-size: 12px;
 }
 
 .sidebarToolbarCollapsed {
@@ -84,6 +85,28 @@
   justify-content: center;
   padding: 8px 0;
   gap: 4px;
+}
+
+/* Extension block */
+.extensionBlock {
+  padding: 4px 8px;
+}
+
+.extensionHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.extensionChildren {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 2px 0 4px 24px;
 }
 
 /* ── MainWorkspace ── */

@@ -46,7 +46,6 @@ type SidebarSegment = 'tasks' | 'channels'
 /* ── 主功能入口数据 ── */
 const navItems = [
   { key: '/new-task', icon: <PlusOutlined />, label: '新任务' },
-  { key: '/agent-studio', icon: <AppstoreOutlined />, label: '扩展' },
   { key: '/tasks', icon: <ClockCircleOutlined />, label: '定时任务' },
   { key: '/data-center', icon: <MobileOutlined />, label: '移动端控制' },
 ]
@@ -60,6 +59,14 @@ const alreadyHereMap: Record<string, string> = {
   '/settings': '当前已在设置页面',
 }
 
+/* 扩展子项数据 */
+const extChildren = [
+  { key: 'expert', label: '专家', msg: '专家模式后续接入' },
+  { key: 'skill', label: '技能', msg: '技能市场后续接入' },
+  { key: 'mcp', label: 'MCP', msg: 'MCP 工具连接后续接入' },
+  { key: 'connector', label: '连接器', msg: '连接器管理后续接入' },
+]
+
 export function AppShell() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -72,6 +79,7 @@ export function AppShell() {
   const [modalOpen, setModalOpen] = useState<
     'usage' | 'shortcuts' | 'feedback' | null
   >(null)
+  const [extOpen, setExtOpen] = useState(false)
 
   const isLight = appearance === 'light'
 
@@ -280,6 +288,42 @@ export function AppShell() {
                 </Tooltip>
               )
             })}
+
+            {/* 扩展入口 - 折叠态 Dropdown */}
+            <Dropdown
+              trigger={['hover']}
+              placement="bottomRight"
+              getPopupContainer={() => document.body}
+              menu={{
+                items: extChildren.map((item) => ({
+                  key: item.key,
+                  label: item.label,
+                  onClick: () => message.info(item.msg),
+                })),
+              }}
+            >
+              <Tooltip title="扩展" placement="right">
+                <Button
+                  type={location.pathname === '/agent-studio' ? 'primary' : 'text'}
+                  icon={<AppstoreOutlined />}
+                  style={{
+                    width: 40,
+                    height: 40,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 18,
+                  }}
+                  onClick={() => {
+                    if (location.pathname === '/agent-studio') {
+                      message.info('当前已在 Agent Studio')
+                    } else {
+                      navigate('/agent-studio')
+                    }
+                  }}
+                />
+              </Tooltip>
+            </Dropdown>
           </Beam>
         ) : (
           <Beam className={styles.sidebarBody}>
@@ -290,6 +334,45 @@ export function AppShell() {
               onClick={({ key }) => handleNavClick(key)}
               style={{ border: 'none', background: 'transparent' }}
             />
+
+            {/* 扩展入口 - 展开态 hover */}
+            <div
+              className={styles.extensionBlock}
+              onMouseEnter={() => setExtOpen(true)}
+              onMouseLeave={() => setExtOpen(false)}
+            >
+              <div
+                className={styles.extensionHeader}
+                style={{
+                  background: extOpen ? token.colorFillSecondary : 'transparent',
+                }}
+                onClick={() => {
+                  if (location.pathname === '/agent-studio') {
+                    message.info('当前已在 Agent Studio')
+                  } else {
+                    navigate('/agent-studio')
+                  }
+                }}
+              >
+                <AppstoreOutlined />
+                <span style={{ flex: 1 }}>扩展</span>
+              </div>
+              {extOpen && (
+                <div className={styles.extensionChildren}>
+                  {extChildren.map((item) => (
+                    <Button
+                      key={item.key}
+                      type="text"
+                      size="small"
+                      style={{ justifyContent: 'flex-start' }}
+                      onClick={() => message.info(item.msg)}
+                    >
+                      {item.label}
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {/* Segmented 切换区 */}
             <div className={styles.sidebarSegmented}>
