@@ -1,21 +1,54 @@
 .root {
-  min-height: 100vh;
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
 }
 
-.header {
+/* ── Sidebar ── */
+.sidebar {
+  width: 220px;
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.sidebarToolbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding-inline: 24px;
+  gap: 4px;
+  padding: 8px 8px 4px;
 }
 
-.logo {
-  font-size: 18px;
-  color: #fff;
-  user-select: none;
+.sidebarBody {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding-block: 4px;
 }
 
-.content {
-  padding: 24px;
+.sidebarSegmented {
+  padding: 4px 12px 8px;
+}
+
+.sidebarEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 12px;
+}
+
+.sidebarFooter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+}
+
+/* ── MainWorkspace ── */
+.workspace {
+  flex: 1;
   overflow: auto;
+  box-sizing: border-box;
 }
