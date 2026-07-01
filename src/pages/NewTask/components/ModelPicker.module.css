@@ -1,4 +1,4 @@
-/* ── Model Picker Dropdown Content ── */
+/* ── Model Picker ── */
 .pickerContent {
   width: 340px;
   border-radius: 8px;
@@ -42,4 +42,13 @@
 
 .pickerFooter {
   padding: 8px 12px;
+}
+
+/* ── Trigger Button ── */
+.modelButton {
+  height: 36px;
+  min-width: 220px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }

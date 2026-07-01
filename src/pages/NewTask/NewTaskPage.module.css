@@ -56,20 +56,36 @@
   justify-content: space-between;
   padding: 6px 10px;
   gap: 8px;
-  height: 44px;
+  height: 48px;
   box-sizing: border-box;
 }
 
 .toolbarLeft {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
 }
 
 .toolbarRight {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+}
+
+.iconBtn {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modeBtn {
+  height: 36px;
+  min-width: 128px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ── Workspace Directory Row ── */
@@ -81,6 +97,21 @@
   max-width: 820px;
   padding: 10px 4px 0;
   font-size: 13px;
+}
+
+/* ── Folder Modal List ── */
+.folderList {
+  padding: 4px 0;
+}
+
+.folderItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease;
 }
 
 /* ── Guide Panel ── */
@@ -96,6 +127,21 @@
   transform: translateY(-2px);
 }
 
+.guideContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+}
+
+.guideStepDesc {
+  font-size: 13px;
+  min-height: 40px;
+  max-width: 480px;
+  transition: opacity 0.25s ease;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .guidePanel {
     transition: none;
@@ -104,6 +150,9 @@
     transform: none;
   }
   .composer {
+    transition: none;
+  }
+  .guideStepDesc {
     transition: none;
   }
 }

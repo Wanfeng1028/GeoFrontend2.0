@@ -728,7 +728,34 @@ const { token } = theme.useToken()
 
 ---
 
-## 16. 页面开发规则
+## 16. 亮色主题的组件表面与按钮色彩规则
+
+Bootstrap / light 模式下，组件表面和按钮需遵循以下色彩规则：
+
+```text
+1. 页面不能大面积使用纯白卡片和纯白按钮，避免默认后台模板感。
+2. 普通区域表面不应直接大量使用 token.colorBgContainer，除非该组件本身就是 AntD 原生输入、弹窗或表格容器。
+3. 自定义业务面板、工作流引导、状态提示区域，优先使用 AntD token 语义背景色：
+   - token.colorPrimaryBg
+   - token.colorInfoBg
+   - token.colorSuccessBg
+   - token.colorWarningBg
+   - token.colorFillQuaternary
+   - token.colorFillTertiary
+   - token.colorFillSecondary
+   - token.colorBgElevated
+4. 不允许手写固定白色、蓝色、灰色值。
+5. 不允许通过 CSS 覆盖 AntD Button 的 background、border、box-shadow。
+6. 主要操作按钮使用 Button type="primary"。
+7. 危险操作使用 Button type="primary" danger。
+8. 次级操作优先使用 AntD 的 token / color / variant 能力，或使用 Tag、Alert、Segmented、Card 等语义组件，不要全部做成白色按钮。
+9. 亮色主题可以使用 AntD 语义色（info、success、warning、primary）的 token 做层次区分，但必须克制，不能做成花哨彩色面板。
+10. Dark 模式仍然交给 darkAlgorithm 和 token，不手写黑色。
+```
+
+---
+
+## 17. 页面开发规则
 
 每个页面至少考虑：
 

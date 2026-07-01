@@ -54,6 +54,8 @@ interface ModelPickerProps {
 export function ModelPicker({ model, onModelChange }: ModelPickerProps) {
   const { message } = App.useApp()
   const { token } = theme.useToken()
+
+  const [dropdownOpen, setDropdownOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
 
   /* 模型设置状态 */
@@ -68,6 +70,11 @@ export function ModelPicker({ model, onModelChange }: ModelPickerProps) {
   const handleSettingsSave = () => {
     message.success('模型设置已保存到前端状态，后续将接入持久化')
     setSettingsOpen(false)
+  }
+
+  const handleOpenSettings = () => {
+    setDropdownOpen(false)
+    setSettingsOpen(true)
   }
 
   const dropdownContent = (
@@ -102,6 +109,7 @@ export function ModelPicker({ model, onModelChange }: ModelPickerProps) {
               }}
               onClick={() => {
                 onModelChange(m.name)
+                setDropdownOpen(false)
                 message.info(`已切换到：${m.name}`)
               }}
             >
@@ -131,7 +139,7 @@ export function ModelPicker({ model, onModelChange }: ModelPickerProps) {
           type="text"
           icon={<SettingOutlined />}
           block
-          onClick={() => setSettingsOpen(true)}
+          onClick={handleOpenSettings}
         >
           模型设置
         </Button>
@@ -142,12 +150,14 @@ export function ModelPicker({ model, onModelChange }: ModelPickerProps) {
   return (
     <>
       <Dropdown
+        open={dropdownOpen}
+        onOpenChange={setDropdownOpen}
         dropdownRender={() => dropdownContent}
         trigger={['click']}
         placement="topRight"
         getPopupContainer={() => document.body}
       >
-        <Button type="text" size="small">
+        <Button type="text" size="middle" className={styles.modelButton}>
           <Space size={4}>
             <RobotOutlined />
             {model}

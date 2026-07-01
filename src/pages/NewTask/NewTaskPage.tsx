@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   App,
   Button,
   Card,
   Dropdown,
   Input,
+  Modal,
   Space,
   Steps,
   Tooltip,
@@ -21,7 +22,6 @@ import {
   GlobalOutlined,
   RobotOutlined,
   CloudUploadOutlined,
-  FileImageOutlined,
   FolderOutlined,
   RocketOutlined,
   DatabaseOutlined,
@@ -49,45 +49,93 @@ const ATTACH_ITEMS = [
   { key: 'mcp', icon: <GlobalOutlined />, label: '连接 MCP', msg: 'MCP 工具连接后续接入' },
   { key: 'file', icon: <CloudUploadOutlined />, label: '选择文件', msg: '文件选择后续接入' },
   { key: 'folder', icon: <FolderOutlined />, label: '选择文件夹', msg: '文件夹选择后续接入' },
-  { key: 'image', icon: <FileImageOutlined />, label: '上传图片', msg: '图片上传后续接入' },
+  { key: 'image', icon: <FolderOpenOutlined />, label: '上传图片', msg: '图片上传后续接入' },
 ]
 
-const WORK_DIR_ITEMS = [
+const SIMULATED_DIRS = [
+  'E:\\code\\javascript\\project\\GeoFrontend2.0',
+  'E:\\code\\javascript\\project\\GeoWork',
+  'E:\\code\\javascript\\project',
+]
+
+const WORKFLOW_STEPS = [
   {
-    type: 'group' as const,
-    label: '操作',
-    children: [
-      { key: 'choose', label: '选择目录…', action: 'msg' as const, msg: '文件夹选择后续接入' },
-    ],
+    title: '导入空间数据',
+    icon: <DatabaseOutlined />,
+    desc: '选择 GeoJSON、Shapefile、栅格影像或示例数据作为分析输入。',
   },
   {
-    type: 'group' as const,
-    label: '最近使用的目录',
-    children: [
-      { key: 'geo-frontend', label: 'GeoFrontend2.0', action: 'select' as const, msg: '' },
-      { key: 'geowork', label: 'GeoWork', action: 'select' as const, msg: '' },
-    ],
+    title: '预览地图图层',
+    icon: <EnvironmentOutlined />,
+    desc: '在地图工作区查看图层范围、属性字段和坐标系统。',
   },
   {
-    type: 'group' as const,
-    label: '示例工作空间',
-    children: [
-      { key: 'road-network', label: '城市路网分析', action: 'select' as const, msg: '' },
-      { key: 'remote-sensing', label: '遥感影像处理', action: 'select' as const, msg: '' },
-      { key: 'land-use', label: '土地利用制图', action: 'select' as const, msg: '' },
-    ],
+    title: '运行空间分析',
+    icon: <BarChartOutlined />,
+    desc: '执行缓冲区、叠加分析、遥感指数或空间查询任务。',
+  },
+  {
+    title: '生成报告',
+    icon: <FileTextOutlined />,
+    desc: '导出分析结果、地图截图、过程记录和可追溯报告。',
   },
 ]
+
+/* 检测 prefers-reduced-motion */
+function useReducedMotion() {
+  const [reduced, setReduced] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setReduced(mq.matches)
+    const handler = (e: MediaQueryListEvent) => setReduced(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+  return reduced
+}
 
 export function NewTaskPage() {
   const { message } = App.useApp()
   const { token } = theme.useToken()
+  const reducedMotion = useReducedMotion()
 
   const [prompt, setPrompt] = useState('')
   const [mode, setMode] = useState('通用 GIS')
   const [model, setModel] = useState('Auto')
   const [workDir, setWorkDir] = useState<string | null>(null)
   const [focused, setFocused] = useState(false)
+
+  /* 文件夹选择 Modal */
+  const [folderModalOpen, setFolderModalOpen] = useState(false)
+  const [selectedFolder, setSelectedFolder] = useState<string | null>(null)
+
+  /* GuidePanel Steps */
+  const [activeStep, setActiveStep] = useState(0)
+  const [guideHover, setGuideHover] = useState(false)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const startAutoStep = useCallback(() => {
+    if (reducedMotion) return
+    intervalRef.current = setInterval(() => {
+      setActiveStep((prev) => (prev + 1) % WORKFLOW_STEPS.length)
+    }, 1800)
+  }, [reducedMotion])
+
+  const stopAutoStep = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+      intervalRef.current = null
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!guideHover) {
+      startAutoStep()
+    } else {
+      stopAutoStep()
+    }
+    return stopAutoStep
+  }, [guideHover, startAutoStep, stopAutoStep])
 
   const handleSend = () => {
     if (!prompt.trim()) {
@@ -133,21 +181,54 @@ export function NewTaskPage() {
 
   /* 工作目录菜单 */
   const workDirMenu = {
-    items: WORK_DIR_ITEMS.map((group) => ({
-      type: 'group' as const,
-      label: group.label,
-      children: group.children.map((child) => ({
-        key: child.key,
-        label: child.label,
-        onClick: () => {
-          if (child.action === 'msg') {
-            message.info(child.msg)
-          } else {
-            setWorkDir(child.label)
-          }
-        },
-      })),
-    })),
+    items: [
+      {
+        type: 'group' as const,
+        label: '选择目录',
+        children: [
+          {
+            key: 'choose-folder',
+            icon: <FolderOpenOutlined />,
+            label: '选择文件夹',
+            onClick: () => {
+              setSelectedFolder(null)
+              setFolderModalOpen(true)
+            },
+          },
+        ],
+      },
+      {
+        type: 'group' as const,
+        label: '最近的目录',
+        children: [
+          {
+            key: 'geo-frontend',
+            label: 'GeoFrontend2.0',
+            onClick: () => {
+              setWorkDir('GeoFrontend2.0')
+              message.success('工作目录已设置为：GeoFrontend2.0')
+            },
+          },
+          {
+            key: 'geowork',
+            label: 'GeoWork',
+            onClick: () => {
+              setWorkDir('GeoWork')
+              message.success('工作目录已设置为：GeoWork')
+            },
+          },
+        ],
+      },
+    ],
+  }
+
+  const handleUseDir = () => {
+    if (selectedFolder) {
+      const name = selectedFolder.split('\\').pop() ?? selectedFolder
+      setWorkDir(name)
+      message.success(`工作目录已设置为：${name}`)
+      setFolderModalOpen(false)
+    }
   }
 
   return (
@@ -211,12 +292,12 @@ export function NewTaskPage() {
           <div className={styles.toolbarLeft}>
             <Dropdown menu={attachMenu} trigger={['click']} placement="topLeft">
               <Tooltip title="添加附件">
-                <Button type="text" icon={<PlusOutlined />} size="middle" />
+                <Button type="text" icon={<PlusOutlined />} className={styles.iconBtn} />
               </Tooltip>
             </Dropdown>
 
             <Dropdown menu={modeMenu} trigger={['click']} placement="topLeft">
-              <Button type="primary" ghost size="small">
+              <Button type="primary" ghost size="middle" className={styles.modeBtn}>
                 <Space size={4}>
                   <ThunderboltOutlined />
                   {mode}
@@ -232,7 +313,7 @@ export function NewTaskPage() {
               <Button
                 type="text"
                 icon={<AudioOutlined />}
-                size="middle"
+                className={styles.iconBtn}
                 onClick={() => message.info('语音输入后续接入')}
               />
             </Tooltip>
@@ -241,7 +322,7 @@ export function NewTaskPage() {
               type="primary"
               shape="circle"
               icon={<SendOutlined />}
-              size="middle"
+              className={styles.iconBtn}
               onClick={handleSend}
             />
           </div>
@@ -264,39 +345,93 @@ export function NewTaskPage() {
       <Card
         className={styles.guidePanel}
         style={{
-          background: token.colorBgContainer,
+          background: token.colorFillQuaternary,
           border: `1px solid ${token.colorBorderSecondary}`,
         }}
-        styles={{ body: { padding: '20px 24px' } }}
+        styles={{ body: { padding: '24px 28px' } }}
+        onMouseEnter={() => setGuideHover(true)}
+        onMouseLeave={() => setGuideHover(false)}
       >
-        <Space direction="vertical" size={12} style={{ width: '100%' }}>
+        <div className={styles.guideContent}>
           <Space align="center">
             <RocketOutlined style={{ color: token.colorPrimary, fontSize: 18 }} />
-            <Text strong style={{ fontSize: 15 }}>从一个空间问题开始</Text>
+            <Text strong style={{ fontSize: 16 }}>从一个空间问题开始</Text>
           </Space>
-          <Text type="secondary" style={{ fontSize: 13 }}>
+          <Text type="secondary" style={{ fontSize: 13, maxWidth: 480 }}>
             导入数据、选择工具、运行分析并导出报告。GeoWork 会把每一步记录为可追溯的工作流。
           </Text>
 
           <Steps
+            current={activeStep}
+            onChange={(idx) => setActiveStep(idx)}
             size="small"
-            items={[
-              { title: '导入空间数据', icon: <DatabaseOutlined /> },
-              { title: '预览地图图层', icon: <EnvironmentOutlined /> },
-              { title: '运行空间分析', icon: <BarChartOutlined /> },
-              { title: '生成报告', icon: <FileTextOutlined /> },
-            ]}
+            style={{ maxWidth: 600, width: '100%' }}
+            items={WORKFLOW_STEPS.map((s) => ({
+              title: s.title,
+              icon: s.icon,
+            }))}
           />
+
+          <Text
+            type="secondary"
+            className={styles.guideStepDesc}
+            style={{ opacity: 1 }}
+          >
+            {WORKFLOW_STEPS[activeStep].desc}
+          </Text>
 
           <Button
             type="primary"
-            size="small"
+            size="middle"
             onClick={() => message.info('工作流示例后续接入')}
           >
             查看工作流示例
           </Button>
-        </Space>
+        </div>
       </Card>
+
+      {/* ── 文件夹选择 Modal ── */}
+      <Modal
+        title="选择工作目录"
+        open={folderModalOpen}
+        onCancel={() => setFolderModalOpen(false)}
+        footer={
+          <Space>
+            <Button onClick={() => setFolderModalOpen(false)}>取消</Button>
+            <Button type="primary" disabled={!selectedFolder} onClick={handleUseDir}>
+              使用此目录
+            </Button>
+          </Space>
+        }
+      >
+        <Text type="secondary" style={{ display: 'block', marginBottom: 12, fontSize: 13 }}>
+          选择一个目录作为当前工作空间（前端模拟，不调用文件系统）
+        </Text>
+        <div className={styles.folderList}>
+          {SIMULATED_DIRS.map((dir) => (
+            <div
+              key={dir}
+              className={styles.folderItem}
+              style={{
+                background: selectedFolder === dir ? token.colorFillSecondary : 'transparent',
+              }}
+              onMouseEnter={(e) => {
+                if (selectedFolder !== dir) e.currentTarget.style.background = token.colorFillTertiary
+              }}
+              onMouseLeave={(e) => {
+                if (selectedFolder !== dir) e.currentTarget.style.background = 'transparent'
+              }}
+              onClick={() => setSelectedFolder(dir)}
+            >
+              <FolderOutlined style={{ color: token.colorTextSecondary }} />
+              <Text style={{ fontSize: 13 }}>{dir}</Text>
+              {selectedFolder === dir && (
+                <CheckOutlined style={{ marginLeft: 'auto', color: token.colorPrimary }} />
+              )}
+            </div>
+          ))}
+        </div>
+      </Modal>
     </div>
   )
 }
