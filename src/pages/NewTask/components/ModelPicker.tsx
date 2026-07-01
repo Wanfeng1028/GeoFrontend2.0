@@ -152,7 +152,7 @@ export function ModelPicker({ model, onModelChange }: ModelPickerProps) {
         placement="topRight"
         getPopupContainer={() => document.body}
       >
-        <Button color="primary" variant="filled" size="small" shape="round" className={styles.modelButton}>
+        <Button color="primary" variant="solid" size="small" shape="round" className={styles.modelButton}>
           <Space size={4}>
             <ThunderboltOutlined />
             {model}
