@@ -5,7 +5,6 @@ import {
   Card,
   Dropdown,
   Input,
-  Modal,
   Space,
   Steps,
   Tooltip,
@@ -34,6 +33,21 @@ import styles from './NewTaskPage.module.css'
 
 const { Title, Text } = Typography
 
+/* File System Access API 局部类型声明
+ * Web 版通过此 API 请求用户授权选择目录；
+ * 绝对路径和更完整的文件系统权限将在 Electron 阶段接入。
+ */
+type GeoWorkDirectoryHandle = {
+  kind: 'directory'
+  name: string
+}
+
+type DirectoryPickerWindow = Window & {
+  showDirectoryPicker?: (options?: {
+    mode?: 'read' | 'readwrite'
+  }) => Promise<GeoWorkDirectoryHandle>
+}
+
 const MODE_OPTIONS = [
   { key: 'general', label: '通用 GIS' },
   { key: 'spatial', label: '空间分析' },
@@ -50,12 +64,6 @@ const ATTACH_ITEMS = [
   { key: 'file', icon: <CloudUploadOutlined />, label: '选择文件', msg: '文件选择后续接入' },
   { key: 'folder', icon: <FolderOutlined />, label: '选择文件夹', msg: '文件夹选择后续接入' },
   { key: 'image', icon: <FolderOpenOutlined />, label: '上传图片', msg: '图片上传后续接入' },
-]
-
-const SIMULATED_DIRS = [
-  'E:\\code\\javascript\\project\\GeoFrontend2.0',
-  'E:\\code\\javascript\\project\\GeoWork',
-  'E:\\code\\javascript\\project',
 ]
 
 const WORKFLOW_STEPS = [
@@ -104,10 +112,6 @@ export function NewTaskPage() {
   const [model, setModel] = useState('Auto')
   const [workDir, setWorkDir] = useState<string | null>(null)
   const [focused, setFocused] = useState(false)
-
-  /* 文件夹选择 Modal */
-  const [folderModalOpen, setFolderModalOpen] = useState(false)
-  const [selectedFolder, setSelectedFolder] = useState<string | null>(null)
 
   /* GuidePanel Steps */
   const [activeStep, setActiveStep] = useState(0)
@@ -180,6 +184,26 @@ export function NewTaskPage() {
   }
 
   /* 工作目录菜单 */
+  const handlePickDirectory = async () => {
+    const pickerWindow = window as DirectoryPickerWindow
+    if (!pickerWindow.showDirectoryPicker) {
+      message.warning('当前浏览器不支持直接选择文件夹，请使用 Chrome 或 Edge，或等待 Electron 版本接入原生目录选择')
+      return
+    }
+    try {
+      const handle = await pickerWindow.showDirectoryPicker({ mode: 'read' })
+      setWorkDir(handle.name)
+      message.success(`工作目录已设置为：${handle.name}`)
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        message.info('已取消选择工作目录')
+      } else {
+        console.error(error)
+        message.error('选择工作目录失败，请稍后重试')
+      }
+    }
+  }
+
   const workDirMenu = {
     items: [
       {
@@ -189,11 +213,8 @@ export function NewTaskPage() {
           {
             key: 'choose-folder',
             icon: <FolderOpenOutlined />,
-            label: '选择文件夹',
-            onClick: () => {
-              setSelectedFolder(null)
-              setFolderModalOpen(true)
-            },
+            label: '选择目录',
+            onClick: handlePickDirectory,
           },
         ],
       },
@@ -222,15 +243,6 @@ export function NewTaskPage() {
     ],
   }
 
-  const handleUseDir = () => {
-    if (selectedFolder) {
-      const name = selectedFolder.split('\\').pop() ?? selectedFolder
-      setWorkDir(name)
-      message.success(`工作目录已设置为：${name}`)
-      setFolderModalOpen(false)
-    }
-  }
-
   return (
     <div className={styles.root}>
       {/* ── Hero ── */}
@@ -253,7 +265,7 @@ export function NewTaskPage() {
         </svg>
 
         <Title level={2} className={styles.heroTitle} style={{ color: token.colorText }}>
-          不止聊天，搞定空间智能工作流
+          用自然语言搞定空间智能工作流
         </Title>
         <Text type="secondary" className={styles.heroSubtitle}>
           用自然语言连接数据、地图、模型与工具，完成可追溯的 GIS 分析。
@@ -389,49 +401,6 @@ export function NewTaskPage() {
           </Button>
         </div>
       </Card>
-
-      {/* ── 文件夹选择 Modal ── */}
-      <Modal
-        title="选择工作目录"
-        open={folderModalOpen}
-        onCancel={() => setFolderModalOpen(false)}
-        footer={
-          <Space>
-            <Button onClick={() => setFolderModalOpen(false)}>取消</Button>
-            <Button type="primary" disabled={!selectedFolder} onClick={handleUseDir}>
-              使用此目录
-            </Button>
-          </Space>
-        }
-      >
-        <Text type="secondary" style={{ display: 'block', marginBottom: 12, fontSize: 13 }}>
-          选择一个目录作为当前工作空间（前端模拟，不调用文件系统）
-        </Text>
-        <div className={styles.folderList}>
-          {SIMULATED_DIRS.map((dir) => (
-            <div
-              key={dir}
-              className={styles.folderItem}
-              style={{
-                background: selectedFolder === dir ? token.colorFillSecondary : 'transparent',
-              }}
-              onMouseEnter={(e) => {
-                if (selectedFolder !== dir) e.currentTarget.style.background = token.colorFillTertiary
-              }}
-              onMouseLeave={(e) => {
-                if (selectedFolder !== dir) e.currentTarget.style.background = 'transparent'
-              }}
-              onClick={() => setSelectedFolder(dir)}
-            >
-              <FolderOutlined style={{ color: token.colorTextSecondary }} />
-              <Text style={{ fontSize: 13 }}>{dir}</Text>
-              {selectedFolder === dir && (
-                <CheckOutlined style={{ marginLeft: 'auto', color: token.colorPrimary }} />
-              )}
-            </div>
-          ))}
-        </div>
-      </Modal>
     </div>
   )
 }

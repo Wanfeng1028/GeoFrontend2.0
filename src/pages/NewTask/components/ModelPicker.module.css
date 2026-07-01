@@ -47,7 +47,6 @@
 /* ── Trigger Button ── */
 .modelButton {
   height: 36px;
-  min-width: 220px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
