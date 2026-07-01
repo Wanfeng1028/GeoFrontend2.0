@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import {
   App,
+  BorderBeam,
   Button,
   Dropdown,
   Input,
@@ -29,6 +30,7 @@ import {
 } from '@ant-design/icons'
 import { ModelPicker } from './components/ModelPicker'
 import { WorkflowGuideCard } from './components/WorkflowGuideCard'
+import { useAppearanceStore } from '../../shared/stores/appearanceStore'
 import styles from './NewTaskPage.module.css'
 
 const { Title, Text } = Typography
@@ -69,6 +71,8 @@ const ATTACH_ITEMS = [
 export function NewTaskPage() {
   const { message } = App.useApp()
   const { token } = theme.useToken()
+  const { appearance } = useAppearanceStore()
+  const isLight = appearance === 'light'
 
   const [prompt, setPrompt] = useState('')
   const [mode, setMode] = useState('通用 GIS')
@@ -243,86 +247,95 @@ export function NewTaskPage() {
       </div>
 
       {/* ── Composer ── */}
-      <div
-        ref={composerRef}
-        className={styles.composer}
-        style={{
-          background: token.colorBgContainer,
-          border: `1px solid ${focused ? token.colorPrimary : token.colorBorderSecondary}`,
-          boxShadow: focused
-            ? `0 0 0 2px ${token.colorPrimaryBg}`
-            : token.boxShadow,
-        }}
-      >
-        <Input.TextArea
-          className={styles.composerTextarea}
-          placeholder="描述你的 GIS 任务，例如：分析地块缓冲区、生成专题图、查询遥感数据……"
-          autoSize={{ minRows: 2, maxRows: 5 }}
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          variant="borderless"
-          style={{ fontSize: 14, padding: '10px 14px' }}
-        />
-
-        {/* 工具栏 */}
-        <div
-          ref={toolbarRef}
-          className={styles.toolbar}
-          style={{ borderTop: `1px solid ${token.colorBorderSecondary}` }}
-        >
-          <div className={styles.toolbarLeft}>
-            <Dropdown menu={attachMenu} trigger={['click']} placement="topLeft">
-              <Tooltip title="添加附件">
-                <Button color="primary" variant="dashed" icon={<PlusOutlined />} size="small" shape="round" className={styles.iconBtn} />
-              </Tooltip>
-            </Dropdown>
-
-            <Dropdown
-              dropdownRender={modeDropdownRender}
-              trigger={['click']}
-              placement="topLeft"
-              open={modeDropdownOpen}
-              onOpenChange={setModeDropdownOpen}
-            >
-              <Button ref={modeBtnRef} color="primary" variant="outlined" size="small" shape="round" className={styles.modeBtn}>
-                <Space size={4}>
-                  <ThunderboltOutlined />
-                  {mode}
-                </Space>
-              </Button>
-            </Dropdown>
-          </div>
-
-          <div className={styles.toolbarRight}>
-            <div ref={modelPickerRef}>
-              <ModelPicker model={model} onModelChange={setModel} />
-            </div>
-
-            <Tooltip title="语音输入">
-              <Button
-                color="green"
-                variant="filled"
-                shape="round"
-                icon={<AudioOutlined />}
-                className={styles.iconBtn}
-                onClick={() => message.info('语音输入后续接入')}
-              />
-            </Tooltip>
-
-            <Button
-              color="primary"
-              variant="solid"
-              shape="circle"
-              icon={<SendOutlined />}
-              className={styles.iconBtn}
-              onClick={handleSend}
+      {(() => {
+        const composerContent = (
+          <div
+            ref={composerRef}
+            className={styles.composer}
+            style={{
+              background: token.colorBgContainer,
+              border: `1px solid ${focused ? token.colorPrimary : token.colorBorderSecondary}`,
+              boxShadow: focused
+                ? `0 0 0 2px ${token.colorPrimaryBg}`
+                : token.boxShadow,
+            }}
+          >
+            <Input.TextArea
+              className={styles.composerTextarea}
+              placeholder="描述你的 GIS 任务，例如：分析地块缓冲区、生成专题图、查询遥感数据……"
+              autoSize={{ minRows: 2, maxRows: 5 }}
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onFocus={() => setFocused(true)}
+              onBlur={() => setFocused(false)}
+              variant="borderless"
+              style={{ fontSize: 14, padding: '10px 14px' }}
             />
+
+            {/* 工具栏 */}
+            <div
+              ref={toolbarRef}
+              className={styles.toolbar}
+              style={{ borderTop: `1px solid ${token.colorBorderSecondary}` }}
+            >
+              <div className={styles.toolbarLeft}>
+                <Dropdown menu={attachMenu} trigger={['click']} placement="topLeft">
+                  <Tooltip title="添加附件">
+                    <Button color="primary" variant="dashed" icon={<PlusOutlined />} size="small" shape="round" className={styles.iconBtn} />
+                  </Tooltip>
+                </Dropdown>
+
+                <Dropdown
+                  dropdownRender={modeDropdownRender}
+                  trigger={['click']}
+                  placement="topLeft"
+                  open={modeDropdownOpen}
+                  onOpenChange={setModeDropdownOpen}
+                >
+                  <Button ref={modeBtnRef} color="primary" variant="outlined" size="small" shape="round" className={styles.modeBtn}>
+                    <Space size={4}>
+                      <ThunderboltOutlined />
+                      {mode}
+                    </Space>
+                  </Button>
+                </Dropdown>
+              </div>
+
+              <div className={styles.toolbarRight}>
+                <div ref={modelPickerRef}>
+                  <ModelPicker model={model} onModelChange={setModel} />
+                </div>
+
+                <Tooltip title="语音输入">
+                  <Button
+                    color="green"
+                    variant="filled"
+                    shape="round"
+                    icon={<AudioOutlined />}
+                    className={styles.iconBtn}
+                    onClick={() => message.info('语音输入后续接入')}
+                  />
+                </Tooltip>
+
+                <Button
+                  color="primary"
+                  variant="solid"
+                  shape="circle"
+                  icon={<SendOutlined />}
+                  className={styles.iconBtn}
+                  onClick={handleSend}
+                />
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        )
+        return isLight ? (
+          <BorderBeam color={token.colorPrimary} outset={0}>
+            {composerContent}
+          </BorderBeam>
+        ) : composerContent
+      })()}
 
       {/* ── 工作目录 ── */}
       <div ref={workDirRef} className={styles.workDirRow}>
@@ -337,9 +350,18 @@ export function NewTaskPage() {
       </div>
 
       {/* ── 引导卡片 ── */}
-      <div ref={guideCardRef} style={{ marginTop: 48 }}>
-        <WorkflowGuideCard onStartTour={() => setTourOpen(true)} />
-      </div>
+      {(() => {
+        const guideContent = (
+          <div ref={guideCardRef} style={{ marginTop: 48 }}>
+            <WorkflowGuideCard onStartTour={() => setTourOpen(true)} />
+          </div>
+        )
+        return isLight ? (
+          <BorderBeam color={token.colorPrimary} outset={0}>
+            {guideContent}
+          </BorderBeam>
+        ) : guideContent
+      })()}
 
       {/* ── 漫游式引导 ── */}
       <Tour
