@@ -345,6 +345,8 @@ export function AppShell() {
                 className={styles.extensionHeader}
                 style={{
                   background: extOpen ? token.colorFillSecondary : 'transparent',
+                  paddingInline: 16,
+                  marginInline: 12,
                 }}
                 onClick={() => {
                   if (location.pathname === '/agent-studio') {
@@ -360,15 +362,21 @@ export function AppShell() {
               {extOpen && (
                 <div className={styles.extensionChildren}>
                   {extChildren.map((item) => (
-                    <Button
+                    <button
                       key={item.key}
-                      type="text"
-                      size="small"
-                      style={{ justifyContent: 'flex-start' }}
+                      type="button"
+                      role="menuitem"
+                      className={styles.extensionChildRow}
                       onClick={() => message.info(item.msg)}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = token.colorFillSecondary
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent'
+                      }}
                     >
                       {item.label}
-                    </Button>
+                    </button>
                   ))}
                 </div>
               )}

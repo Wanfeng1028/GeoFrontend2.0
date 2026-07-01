@@ -96,14 +96,14 @@
 
 /* Extension block */
 .extensionBlock {
-  padding: 0 8px;
+  padding: 0;
 }
 
 .extensionHeader {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 0 8px;
+  gap: 8px;
+  padding: 0;
   height: 40px;
   border-radius: 6px;
   cursor: pointer;
@@ -113,8 +113,26 @@
 .extensionChildren {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 2px 0 4px 24px;
+  padding: 2px 0 4px;
+}
+
+.extensionChildRow {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  padding-left: 48px;
+  padding-right: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 14px;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  outline: none;
+  width: 100%;
+  text-align: left;
+  box-sizing: border-box;
 }
 
 /* ── MainWorkspace ── */
