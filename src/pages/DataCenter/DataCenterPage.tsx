@@ -1,10 +1,11 @@
 import { Alert, Card, Space, Typography } from 'antd'
+import styles from './DataCenterPage.module.css'
 
 const { Title, Text } = Typography
 
 export function DataCenterPage() {
   return (
-    <div style={{ maxWidth: 600, margin: '80px auto', padding: '0 24px' }}>
+    <div className={styles.root}>
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
         <Title level={2}>DataCenter</Title>
         <Text type="secondary">数据资产、图层管理、文件导入导出</Text>

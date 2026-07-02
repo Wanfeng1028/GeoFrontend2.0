@@ -1,4 +1,5 @@
 import { Alert, Card, List, Space, Typography } from 'antd'
+import styles from './ConnectorsPage.module.css'
 
 const { Title, Text } = Typography
 
@@ -11,7 +12,7 @@ const connectors = [
 
 export function ConnectorsPage() {
   return (
-    <div style={{ maxWidth: 600, margin: '80px auto', padding: '0 24px' }}>
+    <div className={styles.root}>
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
         <Title level={2}>连接器</Title>
         <Text type="secondary">管理外部数据源和服务连接</Text>

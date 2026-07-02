@@ -1,0 +1,8 @@
+.root {
+  padding: 32px;
+  max-width: 1200px;
+  margin: 0 auto;
+  overflow-y: auto;
+  height: 100%;
+  box-sizing: border-box;
+}

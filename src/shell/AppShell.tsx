@@ -136,7 +136,12 @@ export function AppShell() {
   /* 导航点击：已在当前页则提示，否则跳转 */
   const handleNavClick = (key: string) => {
     if (key === location.pathname) {
-      message.info(alreadyHereMap[key] ?? '当前已在该页面')
+      if (key === '/new-task') {
+        /* 新任务页点击时重置会话状态 */
+        navigate('/new-task', { state: { resetKey: Date.now() } })
+      } else {
+        message.info(alreadyHereMap[key] ?? '当前已在该页面')
+      }
     } else {
       navigate(key)
     }
@@ -147,11 +152,7 @@ export function AppShell() {
 
   /* 创建任务按钮 */
   const handleCreateTask = () => {
-    if (location.pathname === '/new-task') {
-      message.info('当前已在新任务页面')
-    } else {
-      navigate('/new-task')
-    }
+    navigate('/new-task', { state: { resetKey: Date.now() } })
   }
 
   /* 设置按钮 */

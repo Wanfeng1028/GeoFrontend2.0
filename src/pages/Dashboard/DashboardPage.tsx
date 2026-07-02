@@ -1,11 +1,13 @@
 import { Card, Space, Typography, Empty } from 'antd'
 import { MobileOutlined } from '@ant-design/icons'
+import styles from './DashboardPage.module.css'
 
 const { Title, Text } = Typography
 
 export function DashboardPage() {
   return (
-    <Space direction="vertical" size="large" style={{ width: '100%' }}>
+    <div className={styles.root}>
+      <Space direction="vertical" size="large" style={{ width: '100%' }}>
       <div>
         <Title level={2} style={{ margin: 0 }}>
           <MobileOutlined style={{ marginRight: 8 }} />
@@ -18,5 +20,6 @@ export function DashboardPage() {
         <Empty description="暂无已连接设备，接入设备后将在此显示" />
       </Card>
     </Space>
+    </div>
   )
 }

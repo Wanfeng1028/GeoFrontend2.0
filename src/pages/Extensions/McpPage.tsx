@@ -1,4 +1,5 @@
 import { Alert, Card, List, Space, Typography } from 'antd'
+import styles from './McpPage.module.css'
 
 const { Title, Text } = Typography
 
@@ -11,7 +12,7 @@ const mcpTools = [
 
 export function McpPage() {
   return (
-    <div style={{ maxWidth: 600, margin: '80px auto', padding: '0 24px' }}>
+    <div className={styles.root}>
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
         <Title level={2}>MCP</Title>
         <Text type="secondary">Model Context Protocol 工具连接</Text>

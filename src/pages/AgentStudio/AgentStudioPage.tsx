@@ -1,10 +1,11 @@
 import { Alert, Card, Space, Typography } from 'antd'
+import styles from './AgentStudioPage.module.css'
 
 const { Title, Text } = Typography
 
 export function AgentStudioPage() {
   return (
-    <div style={{ maxWidth: 600, margin: '80px auto', padding: '0 24px' }}>
+    <div className={styles.root}>
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
         <Title level={2}>AgentStudio</Title>
         <Text type="secondary">模型配置、工具调用、插件管理</Text>

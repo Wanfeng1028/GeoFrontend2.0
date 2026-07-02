@@ -1,6 +1,7 @@
 import { Alert, Card, Segmented, Space, Tag, Typography } from 'antd'
 import { useAppearanceStore } from '../../shared/stores/appearanceStore'
 import type { Appearance } from '../../shared/stores/appearanceStore'
+import styles from './SettingsPage.module.css'
 
 const { Title, Text } = Typography
 
@@ -10,7 +11,7 @@ export function SettingsPage() {
   const setAppearance = useAppearanceStore((s) => s.setAppearance)
 
   return (
-    <div style={{ maxWidth: 600, margin: '80px auto', padding: '0 24px' }}>
+    <div className={styles.root}>
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
         <Title level={2}>Settings</Title>
         <Text type="secondary">主题、模型、运行时、插件配置</Text>

@@ -1,4 +1,5 @@
 import { Alert, Card, List, Space, Typography } from 'antd'
+import styles from './SkillsPage.module.css'
 
 const { Title, Text } = Typography
 
@@ -11,7 +12,7 @@ const skills = [
 
 export function SkillsPage() {
   return (
-    <div style={{ maxWidth: 600, margin: '80px auto', padding: '0 24px' }}>
+    <div className={styles.root}>
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
         <Title level={2}>技能</Title>
         <Text type="secondary">可调用的空间分析技能</Text>

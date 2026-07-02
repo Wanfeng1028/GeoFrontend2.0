@@ -24,6 +24,7 @@ import {
 } from 'antd'
 import { DownOutlined } from '@ant-design/icons'
 import { useAppearanceStore } from '../../shared/stores/appearanceStore'
+import styles from './ThemePreviewPage.module.css'
 
 const { Title, Text, Paragraph } = Typography
 
@@ -38,7 +39,7 @@ export function ThemePreviewPage() {
   const [modalOpen, setModalOpen] = useState(false)
 
   return (
-    <div style={{ padding: 32, maxWidth: 1200, margin: '0 auto' }}>
+    <div className={styles.root}>
       <Title level={2}>Theme Preview</Title>
       <Paragraph type="secondary">
         用于验证 AntD 官网 Bootstrap / Dark / System 主题效果

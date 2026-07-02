@@ -1,10 +1,11 @@
 import { Alert, Card, Space, Typography } from 'antd'
+import styles from './WorkspacePage.module.css'
 
 const { Title, Text } = Typography
 
 export function WorkspacePage() {
   return (
-    <div style={{ maxWidth: 600, margin: '80px auto', padding: '0 24px' }}>
+    <div className={styles.root}>
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
         <Title level={2}>Workspace</Title>
         <Text type="secondary">地图工作台、图层树、空间分析</Text>

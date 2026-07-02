@@ -138,6 +138,6 @@
 /* ── MainWorkspace ── */
 .workspace {
   flex: 1;
-  overflow: auto;
+  overflow: hidden;
   box-sizing: border-box;
 }
