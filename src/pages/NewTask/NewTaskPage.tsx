@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useLocation } from 'react-router'
 import {
   App,
   BorderBeam,
@@ -123,6 +124,23 @@ export function NewTaskPage() {
   const [model, setModel] = useState('Auto')
   const [workDir, setWorkDir] = useState<string | null>(null)
   const [focused, setFocused] = useState(false)
+
+  /* 从路由 state 接收定时任务提示词 */
+  const location = useLocation()
+  const promptFilledRef = useRef(false)
+  useEffect(() => {
+    const initialPrompt = (location.state as { initialPrompt?: string } | null)?.initialPrompt
+    if (initialPrompt && !promptFilledRef.current) {
+      setPrompt((prev) => {
+        if (prev === '') {
+          promptFilledRef.current = true
+          message.success('已生成定时任务提示词，请继续补充细节')
+          return initialPrompt
+        }
+        return prev
+      })
+    }
+  }, [location.state, message])
 
   /* 语音输入 */
   const [recording, setRecording] = useState(false)
@@ -388,7 +406,7 @@ export function NewTaskPage() {
           >
             <Dropdown menu={attachMenu} trigger={['click']} placement="topLeft">
               <Tooltip title="添加附件">
-                <Button color="primary" variant="solid" icon={<PlusOutlined />} size="small" shape="round" className={styles.iconBtn} />
+                <Button color="primary" variant="solid" icon={<PlusOutlined />} size="small" shape="circle" className={styles.iconBtn} />
               </Tooltip>
             </Dropdown>
 
