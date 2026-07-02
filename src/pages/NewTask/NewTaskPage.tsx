@@ -3,114 +3,19 @@ import { useLocation } from 'react-router'
 import {
   App,
   BorderBeam,
-  Button,
-  Dropdown,
-  Input,
-  Space,
-  Tooltip,
   Tour,
   Typography,
   theme,
 } from 'antd'
-import {
-  PlusOutlined,
-  SendOutlined,
-  AudioOutlined,
-  ThunderboltOutlined,
-  FolderOpenOutlined,
-  CheckOutlined,
-  GlobalOutlined,
-  RobotOutlined,
-  CloudUploadOutlined,
-  FolderOutlined,
-  AimOutlined,
-  PieChartOutlined,
-  FileTextOutlined,
-  SearchOutlined,
-  RadarChartOutlined,
-} from '@ant-design/icons'
-import { ModelPicker } from './components/ModelPicker'
 import { WorkflowGuideCard } from './components/WorkflowGuideCard'
+import { ChatComposer } from './components/ChatComposer'
+import { ConversationMessageView } from './components/ConversationMessage'
+import { activeAdapter } from './components/streamAdapters'
+import type { ConversationMessage } from './components/conversationStorage'
 import { useAppearanceStore } from '../../shared/stores/appearanceStore'
 import styles from './NewTaskPage.module.css'
 
 const { Title, Text } = Typography
-
-/* File System Access API 局部类型声明
- * Web 版通过此 API 请求用户授权选择目录；
- * 绝对路径和更完整的文件系统权限将在 Electron 阶段接入。
- */
-type GeoWorkDirectoryHandle = {
-  kind: 'directory'
-  name: string
-}
-
-type DirectoryPickerWindow = Window & {
-  showDirectoryPicker?: (options?: {
-    mode?: 'read' | 'readwrite'
-  }) => Promise<GeoWorkDirectoryHandle>
-}
-
-/* Web Speech API 类型声明 */
-interface SpeechRecognitionEvent extends Event {
-  results: SpeechRecognitionResultList
-  resultIndex: number
-}
-
-interface SpeechRecognitionResultList {
-  length: number
-  item(index: number): SpeechRecognitionResult
-  [index: number]: SpeechRecognitionResult
-}
-
-interface SpeechRecognitionResult {
-  isFinal: boolean
-  length: number
-  item(index: number): SpeechRecognitionAlternative
-  [index: number]: SpeechRecognitionAlternative
-}
-
-interface SpeechRecognitionAlternative {
-  transcript: string
-  confidence: number
-}
-
-interface SpeechRecognitionInstance extends EventTarget {
-  continuous: boolean
-  interimResults: boolean
-  lang: string
-  start(): void
-  stop(): void
-  abort(): void
-  onresult: ((event: SpeechRecognitionEvent) => void) | null
-  onerror: ((event: Event & { error: string }) => void) | null
-  onend: (() => void) | null
-}
-
-declare global {
-  interface Window {
-    SpeechRecognition?: new () => SpeechRecognitionInstance
-    webkitSpeechRecognition?: new () => SpeechRecognitionInstance
-  }
-}
-
-const MODE_OPTIONS = [
-  { key: 'general', label: '通用 GIS', icon: <GlobalOutlined />, desc: '通用地理信息系统任务' },
-  { key: 'spatial', label: '空间分析', icon: <AimOutlined />, desc: '缓冲区、叠加、空间查询' },
-  { key: 'cartography', label: '专题制图', icon: <PieChartOutlined />, desc: '生成专题地图和可视化' },
-  { key: 'paper', label: '论文辅助', icon: <FileTextOutlined />, desc: '学术论文写作辅助' },
-  { key: 'query', label: '数据查询', icon: <SearchOutlined />, desc: '属性与空间数据检索' },
-  { key: 'remote-sensing', label: '遥感解译', icon: <RadarChartOutlined />, desc: '遥感影像处理与解译' },
-]
-
-const ATTACH_ITEMS = [
-  { key: 'skill', icon: <ThunderboltOutlined />, label: '选择技能', msg: '技能选择面板后续接入' },
-  { key: 'expert', icon: <RobotOutlined />, label: '选择专家', msg: '专家模式后续接入' },
-  { key: 'mcp', icon: <GlobalOutlined />, label: '连接 MCP', msg: 'MCP 工具连接后续接入' },
-  { key: 'file', icon: <CloudUploadOutlined />, label: '选择文件', msg: '文件选择后续接入' },
-  { key: 'folder', icon: <FolderOutlined />, label: '选择文件夹', msg: '文件夹选择后续接入' },
-  { key: 'image', icon: <FolderOpenOutlined />, label: '上传图片', msg: '图片上传后续接入' },
-]
 
 export function NewTaskPage() {
   const { message } = App.useApp()
@@ -118,14 +23,18 @@ export function NewTaskPage() {
   const { appearance } = useAppearanceStore()
   const isLight = appearance === 'light'
 
+  /* ── 核心状态 ── */
   const [prompt, setPrompt] = useState('')
-  const [mode, setMode] = useState('通用 GIS')
-  const [modeDropdownOpen, setModeDropdownOpen] = useState(false)
   const [model, setModel] = useState('Auto')
   const [workDir, setWorkDir] = useState<string | null>(null)
-  const [focused, setFocused] = useState(false)
+  const [messages, setMessages] = useState<ConversationMessage[]>([])
+  const [isStreaming, setIsStreaming] = useState(false)
 
-  /* 从路由 state 接收定时任务提示词 */
+  const hasConversation = messages.length > 0
+  const abortRef = useRef<AbortController | null>(null)
+  const messageListRef = useRef<HTMLDivElement>(null)
+
+  /* ── initialPrompt 兼容 ── */
   const location = useLocation()
   const promptFilledRef = useRef(false)
   useEffect(() => {
@@ -142,234 +51,124 @@ export function NewTaskPage() {
     }
   }, [location.state, message])
 
-  /* 语音输入 */
-  const [recording, setRecording] = useState(false)
-  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null)
+  /* ── 自动滚动到底部 ── */
+  useEffect(() => {
+    const el = messageListRef.current
+    if (el) el.scrollTop = el.scrollHeight
+  }, [messages])
 
-  /* Tour */
+  /* ── Tour refs ── */
   const [tourOpen, setTourOpen] = useState(false)
   const composerRef = useRef<HTMLDivElement>(null)
-  const toolbarRef = useRef<HTMLDivElement>(null)
-  const modeBtnRef = useRef<HTMLButtonElement>(null)
-  const modelPickerRef = useRef<HTMLDivElement>(null)
-  const workDirRef = useRef<HTMLDivElement>(null)
   const guideCardRef = useRef<HTMLDivElement>(null)
 
-  /* Typewriter */
+  /* ── Typewriter ── */
   const heroText = '用自然语言搞定空间智能工作流'
   const [typedIndex, setTypedIndex] = useState(0)
   const [loop, setLoop] = useState(0)
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-    if (mq.matches) {
-      setTypedIndex(heroText.length)
-      return
-    }
+    if (mq.matches) { setTypedIndex(heroText.length); return }
     if (typedIndex >= heroText.length) {
-      const pause = setTimeout(() => {
-        setTypedIndex(0)
-        setLoop((l) => l + 1)
-      }, 2000)
+      const pause = setTimeout(() => { setTypedIndex(0); setLoop((l) => l + 1) }, 2000)
       return () => clearTimeout(pause)
     }
     const timer = setTimeout(() => setTypedIndex((prev) => prev + 1), 100)
     return () => clearTimeout(timer)
   }, [typedIndex, heroText.length, loop])
 
+  /* ── 发送消息 ── */
   const handleSend = () => {
-    if (!prompt.trim()) {
-      message.warning('请先描述你的任务')
-      return
+    if (!prompt.trim()) return
+    const userMsg: ConversationMessage = {
+      id: `msg_${Date.now()}_u`,
+      role: 'user',
+      content: prompt.trim(),
+      createdAt: Date.now(),
     }
-    message.success('任务已进入前端队列，后续将接入真实执行流程')
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-      e.preventDefault()
-      handleSend()
-    }
-  }
-
-  /* 语音输入：Web Speech API */
-  const toggleVoiceInput = () => {
-    if (recording) {
-      recognitionRef.current?.stop()
-      return
+    const assistantMsg: ConversationMessage = {
+      id: `msg_${Date.now()}_a`,
+      role: 'assistant',
+      content: '',
+      status: 'streaming',
+      createdAt: Date.now(),
     }
 
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
-    if (!SpeechRecognition) {
-      message.warning('当前浏览器不支持语音输入，请使用 Chrome 或 Edge')
-      return
-    }
+    setMessages((prev) => [...prev, userMsg, assistantMsg])
+    setPrompt('')
+    setIsStreaming(true)
 
-    const recognition = new SpeechRecognition()
-    recognition.continuous = true
-    recognition.interimResults = true
-    recognition.lang = 'zh-CN'
+    /* 启动 mock streaming */
+    const controller = new AbortController()
+    abortRef.current = controller
 
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      let finalTranscript = ''
-      let interimTranscript = ''
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const result = event.results[i]
-        if (result.isFinal) {
-          finalTranscript += result[0].transcript
-        } else {
-          interimTranscript += result[0].transcript
-        }
-      }
-      if (finalTranscript) {
-        setPrompt((prev) => (prev ? prev + ' ' : '') + finalTranscript)
-      }
-    }
-
-    recognition.onerror = (event) => {
-      if (event.error === 'not-allowed') {
-        message.error('麦克风权限被拒绝，请在浏览器设置中允许麦克风访问')
-      } else if (event.error !== 'aborted') {
-        message.error('语音识别出错，请稍后重试')
-      }
-      setRecording(false)
-    }
-
-    recognition.onend = () => {
-      setRecording(false)
-    }
-
-    recognitionRef.current = recognition
-    recognition.start()
-    setRecording(true)
-  }
-
-  /* 加号菜单 */
-  const attachMenu = {
-    items: ATTACH_ITEMS.map((item) => ({
-      key: item.key,
-      icon: item.icon,
-      label: item.label,
-      onClick: () => message.info(item.msg),
-    })),
-  }
-
-  /* 模式下拉 - 卡片风格 */
-  const modeDropdownRender = () => (
-    <div
-      className={styles.modeDropdown}
-      style={{
-        background: token.colorBgElevated,
-        border: `1px solid ${token.colorBorderSecondary}`,
-      }}
-    >
-      {MODE_OPTIONS.map((opt) => {
-        const isActive = mode === opt.label
-        return (
-          <div
-            key={opt.key}
-            className={`${styles.modeItem} ${isActive ? styles.modeItemActive : ''}`}
-            style={isActive ? { background: token.colorPrimaryBg } : undefined}
-            onMouseEnter={(e) => {
-              if (!isActive) e.currentTarget.style.background = token.colorFillSecondary
-            }}
-            onMouseLeave={(e) => {
-              if (!isActive) e.currentTarget.style.background = 'transparent'
-            }}
-            onClick={() => {
-              setMode(opt.label)
-              setModeDropdownOpen(false)
-              message.info(`已切换到：${opt.label}`)
-            }}
-          >
-            <span className={styles.modeItemIcon} style={{ color: isActive ? token.colorPrimary : token.colorTextSecondary }}>
-              {opt.icon}
-            </span>
-            <div className={styles.modeItemContent}>
-              <span className={styles.modeItemLabel}>{opt.label}</span>
-              <span className={styles.modeItemDesc} style={{ color: token.colorTextTertiary }}>{opt.desc}</span>
-            </div>
-            {isActive && <CheckOutlined style={{ color: token.colorPrimary, fontSize: 12 }} />}
-          </div>
-        )
-      })}
-    </div>
-  )
-
-  /* 工作目录菜单 */
-  const handlePickDirectory = async () => {
-    const pickerWindow = window as DirectoryPickerWindow
-    if (!pickerWindow.showDirectoryPicker) {
-      message.warning('当前浏览器不支持直接选择文件夹，请使用 Chrome 或 Edge，或等待 Electron 版本接入原生目录选择')
-      return
-    }
-    try {
-      const handle = await pickerWindow.showDirectoryPicker({ mode: 'read' })
-      setWorkDir(handle.name)
-      message.success(`工作目录已设置为：${handle.name}`)
-    } catch (error) {
-      if (error instanceof DOMException && error.name === 'AbortError') {
-        message.info('已取消选择工作目录')
-      } else {
-        console.error(error)
-        message.error('选择工作目录失败，请稍后重试')
-      }
-    }
-  }
-
-  const workDirMenu = {
-    items: [
+    activeAdapter.start(
       {
-        type: 'group' as const,
-        label: '选择目录',
-        children: [
-          {
-            key: 'choose-folder',
-            icon: <FolderOpenOutlined />,
-            label: '选择目录',
-            onClick: handlePickDirectory,
-          },
-        ],
+        conversationId: 'current',
+        input: userMsg.content,
+        model,
+        mode: '通用 GIS',
+        workDirName: workDir ?? undefined,
       },
       {
-        type: 'group' as const,
-        label: '最近的目录',
-        children: [
-          {
-            key: 'geo-frontend',
-            label: 'E:\\code\\javascript\\project\\GeoFrontend2.0',
-            onClick: () => {
-              setWorkDir('E:\\code\\javascript\\project\\GeoFrontend2.0')
-              message.success('工作目录已设置为：E:\\code\\javascript\\project\\GeoFrontend2.0')
-            },
-          },
-          {
-            key: 'geowork',
-            label: 'E:\\code\\javascript\\project\\GeoWork',
-            onClick: () => {
-              setWorkDir('E:\\code\\javascript\\project\\GeoWork')
-              message.success('工作目录已设置为：E:\\code\\javascript\\project\\GeoWork')
-            },
-          },
-        ],
+        onDelta: (delta) => {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantMsg.id
+                ? { ...m, content: m.content + delta }
+                : m,
+            ),
+          )
+        },
+        onDone: () => {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantMsg.id ? { ...m, status: 'done' as const } : m,
+            ),
+          )
+          setIsStreaming(false)
+          message.success('任务已进入前端队列，后续将接入真实执行流程')
+        },
+        onError: (error) => {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantMsg.id
+                ? { ...m, status: 'error' as const, content: m.content + '\n\n执行出错：' + error.message }
+                : m,
+            ),
+          )
+          setIsStreaming(false)
+        },
       },
-    ],
+      controller.signal,
+    )
   }
 
-  return (
-    <div
-      className={styles.root}
-      style={{
-        background: `linear-gradient(180deg, ${token.colorPrimaryBgHover} 0%, ${token.colorBgLayout} 45%)`,
-      }}
-    >
-      {/* ── Hero ── */}
+  /* ── 停止生成 ── */
+  const handleStop = () => {
+    abortRef.current?.abort()
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.status === 'streaming'
+          ? { ...m, status: 'done' as const, content: m.content + '\n\n生成已停止。' }
+          : m,
+      ),
+    )
+    setIsStreaming(false)
+    message.info('已停止生成')
+  }
+
+  /* ── 清理 ── */
+  useEffect(() => {
+    return () => { abortRef.current?.abort() }
+  }, [])
+
+  /* ══════════════ Home 态 ══════════════ */
+  const homeView = (
+    <div className={styles.homeView}>
+      {/* Hero */}
       <div className={styles.hero}>
-        <svg
-          className={styles.heroLogo}
-          viewBox="0 0 64 64"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
+        <svg className={styles.heroLogo} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
           <rect x="4" y="4" width="56" height="56" rx="8" stroke="currentColor" strokeWidth="2" opacity="0.3" />
           <line x1="4" y1="24" x2="60" y2="24" stroke="currentColor" strokeWidth="1.5" opacity="0.25" />
           <line x1="4" y1="44" x2="60" y2="44" stroke="currentColor" strokeWidth="1.5" opacity="0.25" />
@@ -380,136 +179,104 @@ export function NewTaskPage() {
           <path d="M12 50 L32 40 L52 50 L32 60 Z" stroke="currentColor" strokeWidth="1.5" fill={token.colorPrimary} opacity="0.12" />
           <path d="M12 46 L32 36 L52 46" stroke="currentColor" strokeWidth="1.5" opacity="0.3" fill="none" />
         </svg>
-
         <Title level={2} className={styles.heroTitle} style={{ color: token.colorText }}>
           {heroText.slice(0, typedIndex)}
-          <span
-            className={styles.typewriterCursor}
-            style={{ color: token.colorPrimary, fontWeight: 400 }}
-          >
-            ▎
-          </span>
+          <span className={styles.typewriterCursor} style={{ color: token.colorPrimary, fontWeight: 400 }}>▎</span>
         </Title>
         <Text type="secondary" className={styles.heroSubtitle}>
           用自然语言连接数据、地图、模型与工具，完成可追溯的 GIS 分析。
         </Text>
       </div>
 
-      {/* ── Composer ── */}
-      {(() => {
-        const composerContent = (
-          <div
-            ref={composerRef}
-            className={styles.composer}
-            style={{
-              background: token.colorBgContainer,
-              border: `1px solid ${focused ? token.colorPrimary : token.colorBorderSecondary}`,
-              boxShadow: focused
-                ? `0 0 0 2px ${token.colorPrimaryBg}`
-                : token.boxShadow,
-            }}
-          >
-            <Dropdown menu={attachMenu} trigger={['click']} placement="topLeft">
-              <Tooltip title="添加附件">
-                <Button color="primary" variant="solid" icon={<PlusOutlined />} size="small" shape="circle" className={styles.iconBtn} />
-              </Tooltip>
-            </Dropdown>
-
-            <Input
-              className={styles.composerInput}
-              placeholder="描述你的 GIS 任务，例如：分析地块缓冲区、生成专题图、查询遥感数据……"
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              onKeyDown={handleKeyDown}
-              onFocus={() => setFocused(true)}
-              onBlur={() => setFocused(false)}
-              variant="borderless"
-              style={{ fontSize: 14 }}
+      {/* Composer */}
+      <div ref={composerRef}>
+        {(() => {
+          const composer = (
+            <ChatComposer
+              prompt={prompt}
+              onPromptChange={setPrompt}
+              onSend={handleSend}
+              onStop={handleStop}
+              isStreaming={isStreaming}
+              model={model}
+              onModelChange={setModel}
+              workDir={workDir}
+              onWorkDirChange={setWorkDir}
             />
+          )
+          return isLight ? (
+            <BorderBeam color={token.colorPrimary} outset={0}>{composer}</BorderBeam>
+          ) : composer
+        })()}
+      </div>
 
-            <div ref={toolbarRef} className={styles.composerActions}>
-              <Dropdown
-                dropdownRender={modeDropdownRender}
-                trigger={['click']}
-                placement="topLeft"
-                open={modeDropdownOpen}
-                onOpenChange={setModeDropdownOpen}
-              >
-                <Button
-                  ref={modeBtnRef}
-                  color="purple"
-                  variant="solid"
-                  size="small"
-                  shape="round"
-                  className={styles.modeBtn}
-                >
-                  <Space size={4}>
-                    <ThunderboltOutlined />
-                    {mode}
-                  </Space>
-                </Button>
-              </Dropdown>
-
-              <div ref={modelPickerRef}>
-                <ModelPicker model={model} onModelChange={setModel} />
-              </div>
-
-              <Tooltip title={recording ? '停止录音' : '语音输入'}>
-                <Button
-                  color={recording ? 'danger' : 'green'}
-                  variant="filled"
-                  shape="round"
-                  icon={<AudioOutlined />}
-                  className={styles.iconBtn}
-                  onClick={toggleVoiceInput}
-                />
-              </Tooltip>
-
-              <Button
-                color="primary"
-                variant="solid"
-                shape="circle"
-                icon={<SendOutlined />}
-                className={styles.iconBtn}
-                onClick={handleSend}
-              />
-            </div>
-          </div>
-        )
-        return isLight ? (
-          <BorderBeam color={token.colorPrimary} outset={0}>
-            {composerContent}
-          </BorderBeam>
-        ) : composerContent
-      })()}
-
-      {/* ── 工作目录 ── */}
-      <div ref={workDirRef} className={styles.workDirRow}>
-        <Dropdown menu={workDirMenu} trigger={['click']} placement="bottomLeft" getPopupContainer={() => document.body}>
-          <Button color="default" variant="outlined" size="small" shape="round" icon={<FolderOpenOutlined />}>
-            选择工作目录
-          </Button>
-        </Dropdown>
+      {/* Work Dir */}
+      <div className={styles.workDirRow}>
         <Text type="secondary" style={{ fontSize: 12 }}>
           当前工作目录：{workDir ?? '未选择'}
         </Text>
       </div>
 
-      {/* ── 引导卡片 ── */}
+      {/* Guide Card */}
       {(() => {
-        const guideContent = (
-          <div ref={guideCardRef} style={{ marginTop: 72 }}>
+        const guide = (
+          <div ref={guideCardRef} style={{ marginTop: 48 }}>
             <WorkflowGuideCard onStartTour={() => setTourOpen(true)} />
           </div>
         )
         return isLight ? (
-          <BorderBeam color={token.colorPrimary} outset={0}>
-            {guideContent}
-          </BorderBeam>
-        ) : guideContent
+          <BorderBeam color={token.colorPrimary} outset={0}>{guide}</BorderBeam>
+        ) : guide
       })()}
+    </div>
+  )
 
-      {/* ── 漫游式引导 ── */}
+  /* ══════════════ Conversation 态 ══════════════ */
+  const conversationView = (
+    <div className={styles.conversationView}>
+      {/* Header */}
+      <div
+        className={styles.convHeader}
+        style={{ borderBottom: `1px solid ${token.colorBorderSecondary}` }}
+      >
+        <div className={styles.convHeaderLeft}>
+          <Title level={5} className={styles.convHeaderTitle}>新任务</Title>
+          <Text type="secondary" style={{ fontSize: 12 }}>
+            {model} · {workDir ?? '未选择目录'}
+          </Text>
+        </div>
+      </div>
+
+      {/* Message List */}
+      <div className={styles.messageList} ref={messageListRef}>
+        {messages.map((msg) => (
+          <ConversationMessageView key={msg.id} data={msg} />
+        ))}
+      </div>
+
+      {/* Composer */}
+      <div className={styles.composerArea}>
+        <ChatComposer
+          prompt={prompt}
+          onPromptChange={setPrompt}
+          onSend={handleSend}
+          onStop={handleStop}
+          isStreaming={isStreaming}
+          model={model}
+          onModelChange={setModel}
+          workDir={workDir}
+          onWorkDirChange={setWorkDir}
+          conversationMode
+        />
+      </div>
+    </div>
+  )
+
+  return (
+    <div className={styles.root}>
+      {hasConversation ? conversationView : homeView}
+
+      {/* Tour */}
       <Tour
         open={tourOpen}
         onClose={() => setTourOpen(false)}
@@ -518,30 +285,6 @@ export function NewTaskPage() {
             target: () => composerRef.current!,
             title: '输入任务描述',
             description: '在这里用自然语言描述您的 GIS 任务，例如缓冲区分析、专题制图等。',
-            placement: 'bottom',
-          },
-          {
-            target: () => toolbarRef.current!,
-            title: '工具栏',
-            description: '添加附件、切换模式、选择模型、语音输入和发送任务。',
-            placement: 'bottom',
-          },
-          {
-            target: () => modeBtnRef.current!,
-            title: '任务模式',
-            description: '选择不同的任务模式：通用 GIS、空间分析、专题制图等。',
-            placement: 'bottom',
-          },
-          {
-            target: () => modelPickerRef.current!,
-            title: '模型选择',
-            description: '选择 AI 模型来处理您的任务。',
-            placement: 'top',
-          },
-          {
-            target: () => workDirRef.current!,
-            title: '工作目录',
-            description: '选择本地工作目录，用于存放分析数据和输出文件。',
             placement: 'bottom',
           },
           {
