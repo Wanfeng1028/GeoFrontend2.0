@@ -45,6 +45,7 @@ import { ShortcutsModal } from './ShortcutsModal'
 import { FeedbackModal } from './FeedbackModal'
 import { UsageModal } from './UsageModal'
 import { UserMenu } from './UserMenu'
+import { GlobalSearchModal } from './GlobalSearchModal'
 import styles from './AppShell.module.css'
 
 type SidebarSegment = 'tasks' | 'channels'
@@ -89,6 +90,7 @@ export function AppShell() {
   >(null)
   const [extOpen, setExtOpen] = useState(false)
   const [extHeaderHover, setExtHeaderHover] = useState(false)
+  const [globalSearchOpen, setGlobalSearchOpen] = useState(false)
 
   const isOnExtension = extRoutes.includes(location.pathname)
 
@@ -246,7 +248,7 @@ export function AppShell() {
                   type="text"
                   icon={<SearchOutlined />}
                   size="small"
-                  onClick={() => message.info('全局搜索功能后续接入')}
+                  onClick={() => setGlobalSearchOpen(true)}
                 />
               </Tooltip>
               <div style={{ flex: 1 }} />
@@ -529,6 +531,11 @@ export function AppShell() {
       <FeedbackModal
         open={modalOpen === 'feedback'}
         onClose={() => setModalOpen(null)}
+      />
+
+      <GlobalSearchModal
+        open={globalSearchOpen}
+        onClose={() => setGlobalSearchOpen(false)}
       />
     </div>
   )
