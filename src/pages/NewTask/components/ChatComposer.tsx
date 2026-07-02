@@ -381,8 +381,8 @@ export function ChatComposer({
         </div>
       )}
 
-      {/* 主行：[+] TextArea [actions] */}
-      <div className={styles.composerRow}>
+      {/* 输入行：[+] TextArea */}
+      <div className={styles.inputRow}>
         <Dropdown menu={attachMenu} trigger={['click']} placement="topLeft">
           <Tooltip title="添加附件">
             <Button color="primary" variant="solid" icon={<PlusOutlined />} size="small" shape="circle" className={styles.iconBtn} />
@@ -391,7 +391,7 @@ export function ChatComposer({
 
         <Input.TextArea
           className={styles.textArea}
-          placeholder="描述你的 GIS 任务，例如：分析地块缓冲区、生成专题图、查询遥感数据……"
+          placeholder="生成专题图、查询遥感数据……"
           value={prompt}
           onChange={(e) => onPromptChange(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -403,62 +403,63 @@ export function ChatComposer({
           autoSize={{ minRows: 1, maxRows: 8 }}
           style={{ fontSize: 14, resize: 'none' }}
         />
+      </div>
 
-        <div className={styles.toolbarActions}>
-          <Dropdown
-            dropdownRender={modeDropdownRender}
-            trigger={['click']}
-            placement="topLeft"
-            open={modeDropdownOpen}
-            onOpenChange={setModeDropdownOpen}
-          >
-            <Button color="purple" variant="solid" size="small" shape="round" className={styles.modeBtn}>
-              <Space size={4}>
-                <ThunderboltOutlined />
-                {mode}
-              </Space>
-            </Button>
-          </Dropdown>
+      {/* 工具栏行 */}
+      <div className={styles.toolbarRow}>
+        <Dropdown
+          dropdownRender={modeDropdownRender}
+          trigger={['click']}
+          placement="topLeft"
+          open={modeDropdownOpen}
+          onOpenChange={setModeDropdownOpen}
+        >
+          <Button color="purple" variant="solid" size="small" shape="round" className={styles.modeBtn}>
+            <Space size={4}>
+              <ThunderboltOutlined />
+              {mode}
+            </Space>
+          </Button>
+        </Dropdown>
 
-          <ModelPicker model={model} onModelChange={onModelChange} />
+        <ModelPicker model={model} onModelChange={onModelChange} />
 
-          <Dropdown menu={workDirMenu} trigger={['click']} placement="topLeft" getPopupContainer={() => document.body}>
-            <Tooltip title={workDir ? `工作目录：${workDir}` : '选择工作目录'}>
-              <Button type="text" size="small" icon={<FolderOpenOutlined />} shape="round" className={styles.iconBtn} />
-            </Tooltip>
-          </Dropdown>
-
-          <Tooltip title={recording ? '停止录音' : '语音输入'}>
-            <Button
-              color={recording ? 'danger' : 'green'}
-              variant="filled"
-              shape="round"
-              icon={<AudioOutlined />}
-              className={styles.iconBtn}
-              onClick={toggleVoiceInput}
-            />
+        <Dropdown menu={workDirMenu} trigger={['click']} placement="topLeft" getPopupContainer={() => document.body}>
+          <Tooltip title={workDir ? `工作目录：${workDir}` : '选择工作目录'}>
+            <Button type="text" size="small" icon={<FolderOpenOutlined />} shape="round" className={styles.iconBtn} />
           </Tooltip>
+        </Dropdown>
 
-          {isStreaming ? (
-            <Button
-              danger
-              shape="round"
-              icon={<StopOutlined />}
-              className={styles.iconBtn}
-              onClick={onStop}
-            />
-          ) : (
-            <Button
-              color="primary"
-              variant="solid"
-              shape="circle"
-              icon={<SendOutlined />}
-              className={styles.iconBtn}
-              onClick={handleSend}
-              disabled={!prompt.trim()}
-            />
-          )}
-        </div>
+        <Tooltip title={recording ? '停止录音' : '语音输入'}>
+          <Button
+            color={recording ? 'danger' : 'green'}
+            variant="filled"
+            shape="round"
+            icon={<AudioOutlined />}
+            className={styles.iconBtn}
+            onClick={toggleVoiceInput}
+          />
+        </Tooltip>
+
+        {isStreaming ? (
+          <Button
+            danger
+            shape="round"
+            icon={<StopOutlined />}
+            className={styles.iconBtn}
+            onClick={onStop}
+          />
+        ) : (
+          <Button
+            color="primary"
+            variant="solid"
+            shape="circle"
+            icon={<SendOutlined />}
+            className={styles.iconBtn}
+            onClick={handleSend}
+            disabled={!prompt.trim()}
+          />
+        )}
       </div>
     </div>
   )
