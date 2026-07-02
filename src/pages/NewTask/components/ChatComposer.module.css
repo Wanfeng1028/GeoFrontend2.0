@@ -1,8 +1,8 @@
 .composer {
   display: flex;
   flex-direction: column;
-  width: 95%;
-  max-width: 960px;
+  width: 100%;
+  max-width: 820px;
   border-radius: 16px;
   padding: 8px 12px 6px;
   gap: 2px;
@@ -52,7 +52,7 @@
 
 /* ── 对话态 composer 固定在底部 ── */
 .composerConversation {
-  max-width: 960px;
+  max-width: 860px;
   margin: 0 auto;
   border-radius: 16px;
 }
