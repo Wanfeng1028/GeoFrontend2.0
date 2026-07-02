@@ -1,10 +1,10 @@
 .composer {
   display: flex;
   flex-direction: column;
-  width: 100%;
-  max-width: 820px;
-  border-radius: 28px;
-  padding: 6px 8px 6px 6px;
+  width: 95%;
+  max-width: 960px;
+  border-radius: 24px;
+  padding: 4px 6px 4px 4px;
   gap: 4px;
   box-sizing: border-box;
   transition: box-shadow 0.2s ease;
@@ -12,8 +12,9 @@
 
 .composerRow {
   display: flex;
-  align-items: flex-end;
-  gap: 6px;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: nowrap;
 }
 
 .textArea {
@@ -31,8 +32,9 @@
 .toolbarActions {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
   flex-shrink: 0;
+  flex-wrap: nowrap;
 }
 
 .iconBtn {
@@ -52,9 +54,9 @@
 
 /* ── 对话态 composer 固定在底部 ── */
 .composerConversation {
-  max-width: 860px;
+  max-width: 960px;
   margin: 0 auto;
-  border-radius: 28px;
+  border-radius: 24px;
 }
 
 /* ── Mode Card Dropdown ── */
