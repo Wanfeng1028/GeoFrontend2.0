@@ -143,7 +143,7 @@ export function GlobalSearchModal({ open, onClose }: GlobalSearchModalProps) {
       onCancel={handleClose}
       footer={null}
       destroyOnClose
-      width={680}
+      width={920}
       afterOpenChange={handleAfterOpenChange}
     >
       <div ref={wrapperRef}>
