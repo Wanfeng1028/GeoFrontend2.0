@@ -56,12 +56,13 @@ export function WorkflowGuideCard({ onStartTour }: Props) {
 
       {/* Actions */}
       <div className={styles.actions}>
-        <Button type="primary" size="small" onClick={onStartTour}>
+        <Button type="primary" size="small" shape="round" onClick={onStartTour}>
           开始引导
         </Button>
         <Button
           type="text"
           size="small"
+          shape="round"
           icon={<ShareAltOutlined />}
           onClick={() => message.info('分享流程功能后续接入')}
         >
@@ -70,6 +71,7 @@ export function WorkflowGuideCard({ onStartTour }: Props) {
         <Button
           type="text"
           size="small"
+          shape="round"
           icon={<EditOutlined />}
           onClick={() => message.info('编辑模板功能后续接入')}
         >

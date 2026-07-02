@@ -93,16 +93,23 @@ export function NewTaskPage() {
   /* Typewriter */
   const heroText = '用自然语言搞定空间智能工作流'
   const [typedIndex, setTypedIndex] = useState(0)
+  const [loop, setLoop] = useState(0)
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
     if (mq.matches) {
       setTypedIndex(heroText.length)
       return
     }
-    if (typedIndex >= heroText.length) return
+    if (typedIndex >= heroText.length) {
+      const pause = setTimeout(() => {
+        setTypedIndex(0)
+        setLoop((l) => l + 1)
+      }, 2000)
+      return () => clearTimeout(pause)
+    }
     const timer = setTimeout(() => setTypedIndex((prev) => prev + 1), 100)
     return () => clearTimeout(timer)
-  }, [typedIndex, heroText.length])
+  }, [typedIndex, heroText.length, loop])
 
   const handleSend = () => {
     if (!prompt.trim()) {
@@ -255,10 +262,10 @@ export function NewTaskPage() {
         <Title level={2} className={styles.heroTitle} style={{ color: token.colorText }}>
           {heroText.slice(0, typedIndex)}
           <span
-            className={typedIndex < heroText.length ? styles.typewriterCursor : ''}
+            className={styles.typewriterCursor}
             style={{ color: token.colorPrimary, fontWeight: 400 }}
           >
-            {typedIndex < heroText.length ? '▎' : ''}
+            ▎
           </span>
         </Title>
         <Text type="secondary" className={styles.heroSubtitle}>
@@ -306,7 +313,14 @@ export function NewTaskPage() {
                 open={modeDropdownOpen}
                 onOpenChange={setModeDropdownOpen}
               >
-                <Button ref={modeBtnRef} color="primary" variant="solid" size="small" shape="round" className={styles.modeBtn}>
+                <Button
+                  ref={modeBtnRef}
+                  color="purple"
+                  variant="solid"
+                  size="small"
+                  shape="round"
+                  className={styles.modeBtn}
+                >
                   <Space size={4}>
                     <ThunderboltOutlined />
                     {mode}
@@ -350,7 +364,7 @@ export function NewTaskPage() {
       {/* ── 工作目录 ── */}
       <div ref={workDirRef} className={styles.workDirRow}>
         <Dropdown menu={workDirMenu} trigger={['click']} placement="bottomLeft" getPopupContainer={() => document.body}>
-          <Button color="default" variant="outlined" size="small" icon={<FolderOpenOutlined />}>
+          <Button color="default" variant="outlined" size="small" shape="round" icon={<FolderOpenOutlined />}>
             选择工作目录
           </Button>
         </Dropdown>
