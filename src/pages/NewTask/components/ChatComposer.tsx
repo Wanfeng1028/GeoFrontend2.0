@@ -5,6 +5,7 @@ import {
   Dropdown,
   Input,
   Space,
+  Tag,
   Tooltip,
   theme,
 } from 'antd'
@@ -51,8 +52,13 @@ const ATTACH_ITEMS = [
 
 /* File System Access API 类型 */
 type GeoWorkDirectoryHandle = { kind: 'directory'; name: string }
+type GeoWorkFileHandle = { kind: 'file'; name: string }
 type DirectoryPickerWindow = Window & {
   showDirectoryPicker?: (options?: { mode?: 'read' | 'readwrite' }) => Promise<GeoWorkDirectoryHandle>
+  showOpenFilePicker?: (options?: {
+    multiple?: boolean
+    types?: Array<{ description?: string; accept: Record<string, string[]> }>
+  }) => Promise<GeoWorkFileHandle[]>
 }
 
 /* Web Speech API 类型 */
@@ -130,6 +136,7 @@ export function ChatComposer({
   const [recording, setRecording] = useState(false)
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null)
   const composingRef = useRef(false)
+  const [attachments, setAttachments] = useState<string[]>([])
 
   /* ── 发送 ── */
   const handleSend = () => {
@@ -233,13 +240,87 @@ export function ChatComposer({
     ],
   }
 
+  /* ── 附件操作 handlers ── */
+  const handlePickFile = async () => {
+    const pickerWindow = window as DirectoryPickerWindow
+    if (!pickerWindow.showOpenFilePicker) {
+      message.warning('当前浏览器不支持文件选择，请使用 Chrome 或 Edge')
+      return
+    }
+    try {
+      const handles = await pickerWindow.showOpenFilePicker({ multiple: true })
+      const names = handles.map((h) => h.name)
+      setAttachments((prev) => [...prev, ...names])
+      message.success(`已添加 ${names.length} 个文件：${names.join('、')}`)
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        message.info('已取消文件选择')
+      } else {
+        console.error(error)
+        message.error('选择文件失败')
+      }
+    }
+  }
+
+  const handlePickAttachFolder = async () => {
+    const pickerWindow = window as DirectoryPickerWindow
+    if (!pickerWindow.showDirectoryPicker) {
+      message.warning('当前浏览器不支持文件夹选择，请使用 Chrome 或 Edge')
+      return
+    }
+    try {
+      const handle = await pickerWindow.showDirectoryPicker({ mode: 'read' })
+      setAttachments((prev) => [...prev, `[文件夹] ${handle.name}`])
+      message.success(`已添加文件夹：${handle.name}`)
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        message.info('已取消文件夹选择')
+      } else {
+        console.error(error)
+        message.error('选择文件夹失败')
+      }
+    }
+  }
+
+  const handlePickImage = async () => {
+    const pickerWindow = window as DirectoryPickerWindow
+    if (!pickerWindow.showOpenFilePicker) {
+      message.warning('当前浏览器不支持图片选择，请使用 Chrome 或 Edge')
+      return
+    }
+    try {
+      const handles = await pickerWindow.showOpenFilePicker({
+        multiple: true,
+        types: [{ description: '图片', accept: { 'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp'] } }],
+      })
+      const names = handles.map((h) => h.name)
+      setAttachments((prev) => [...prev, ...names])
+      message.success(`已添加 ${names.length} 张图片：${names.join('、')}`)
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        message.info('已取消图片选择')
+      } else {
+        console.error(error)
+        message.error('选择图片失败')
+      }
+    }
+  }
+
+  const attachHandlers: Record<string, () => void> = {
+    file: handlePickFile,
+    folder: handlePickAttachFolder,
+    image: handlePickImage,
+  }
+
   /* ── 加号菜单 ── */
   const attachMenu = {
     items: ATTACH_ITEMS.map((item) => ({
       key: item.key,
       icon: item.icon,
       label: item.label,
-      onClick: () => message.info(item.msg),
+      onClick: attachHandlers[item.key]
+        ? attachHandlers[item.key]
+        : () => message.info(item.msg),
     })),
   }
 
@@ -284,6 +365,22 @@ export function ChatComposer({
         boxShadow: focused ? `0 0 0 2px ${token.colorPrimaryBg}` : token.boxShadow,
       }}
     >
+      {/* 附件标签 */}
+      {attachments.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, padding: '8px 12px 0' }}>
+          {attachments.map((name, idx) => (
+            <Tag
+              key={idx}
+              closable
+              onClose={() => setAttachments((prev) => prev.filter((_, i) => i !== idx))}
+              style={{ margin: 0, fontSize: 12 }}
+            >
+              {name}
+            </Tag>
+          ))}
+        </div>
+      )}
+
       {/* TextArea */}
       <Input.TextArea
         className={styles.textArea}
