@@ -498,7 +498,7 @@ export function NewTaskPage() {
       {/* ── 引导卡片 ── */}
       {(() => {
         const guideContent = (
-          <div ref={guideCardRef} style={{ marginTop: 48 }}>
+          <div ref={guideCardRef} style={{ marginTop: 72 }}>
             <WorkflowGuideCard onStartTour={() => setTourOpen(true)} />
           </div>
         )
