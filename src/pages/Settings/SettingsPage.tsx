@@ -22,9 +22,11 @@ export function SettingsPage() {
               value={appearance}
               onChange={(value) => setAppearance(value as Appearance)}
               options={[
-                { label: 'Bootstrap', value: 'light' },
-                { label: 'Dark', value: 'dark' },
-                { label: 'System', value: 'system' },
+                { label: '默认亮色', value: 'light' },
+                { label: '暗色', value: 'dark' },
+                { label: '跟随系统', value: 'system' },
+                { label: '插画风格', value: 'illustration' },
+                { label: '玻璃风格', value: 'glass' },
               ]}
             />
             <Text>

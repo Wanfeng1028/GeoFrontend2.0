@@ -38,9 +38,12 @@ import {
   ToolOutlined,
   ApiOutlined,
   LinkOutlined,
+  FormatPainterOutlined,
+  BgColorsOutlined,
 } from '@ant-design/icons'
 import { Outlet, useLocation, useNavigate } from 'react-router'
 import { useAppearanceStore } from '../shared/stores/appearanceStore'
+import type { Appearance } from '../shared/stores/appearanceStore'
 import { ShortcutsModal } from './ShortcutsModal'
 import { FeedbackModal } from './FeedbackModal'
 import { UsageModal } from './UsageModal'
@@ -171,7 +174,7 @@ export function AppShell() {
       icon: <SunOutlined />,
       label: (
         <Space>
-          Bootstrap
+          默认亮色
           {appearance === 'light' && <CheckOutlined />}
         </Space>
       ),
@@ -181,7 +184,7 @@ export function AppShell() {
       icon: <MoonOutlined />,
       label: (
         <Space>
-          Dark
+          暗色
           {appearance === 'dark' && <CheckOutlined />}
         </Space>
       ),
@@ -191,8 +194,28 @@ export function AppShell() {
       icon: <DesktopOutlined />,
       label: (
         <Space>
-          System
+          跟随系统
           {appearance === 'system' && <CheckOutlined />}
+        </Space>
+      ),
+    },
+    {
+      key: 'illustration',
+      icon: <FormatPainterOutlined />,
+      label: (
+        <Space>
+          插画风格
+          {appearance === 'illustration' && <CheckOutlined />}
+        </Space>
+      ),
+    },
+    {
+      key: 'glass',
+      icon: <BgColorsOutlined />,
+      label: (
+        <Space>
+          玻璃风格
+          {appearance === 'glass' && <CheckOutlined />}
         </Space>
       ),
     },
@@ -493,7 +516,7 @@ export function AppShell() {
             menu={{
               items: themeMenuItems,
               onClick: ({ key }) =>
-                setAppearance(key as 'light' | 'dark' | 'system'),
+                setAppearance(key as Appearance),
             }}
             trigger={['click']}
             placement="topRight"

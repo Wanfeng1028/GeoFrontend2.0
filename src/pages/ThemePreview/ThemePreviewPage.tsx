@@ -24,6 +24,7 @@ import {
 } from 'antd'
 import { DownOutlined } from '@ant-design/icons'
 import { useAppearanceStore } from '../../shared/stores/appearanceStore'
+import type { Appearance } from '../../shared/stores/appearanceStore'
 import styles from './ThemePreviewPage.module.css'
 
 const { Title, Text, Paragraph } = Typography
@@ -42,19 +43,21 @@ export function ThemePreviewPage() {
     <div className={styles.root}>
       <Title level={2}>Theme Preview</Title>
       <Paragraph type="secondary">
-        用于验证 AntD 官网 Bootstrap / Dark / System 主题效果
+        用于验证 Bootstrap / Dark / System / 插画 / 玻璃 主题效果
       </Paragraph>
 
       {/* ── Theme Switcher ── */}
       <Card style={{ marginBottom: 24 }}>
-        <Flex align="center" gap={16}>
+        <Flex align="center" gap={16} wrap="wrap">
           <Segmented
             value={appearance}
-            onChange={(v) => setAppearance(v as 'light' | 'dark' | 'system')}
+            onChange={(v) => setAppearance(v as Appearance)}
             options={[
-              { label: 'Bootstrap', value: 'light' },
-              { label: 'Dark', value: 'dark' },
-              { label: 'System', value: 'system' },
+              { label: '默认亮色', value: 'light' },
+              { label: '暗色', value: 'dark' },
+              { label: '跟随系统', value: 'system' },
+              { label: '插画风格', value: 'illustration' },
+              { label: '玻璃风格', value: 'glass' },
             ]}
           />
           <Text>

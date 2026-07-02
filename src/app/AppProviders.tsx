@@ -12,8 +12,9 @@ interface AppProvidersProps {
 export function AppProviders({ children }: AppProvidersProps) {
   useSystemAppearance()
 
+  const appearance = useAppearanceStore((s) => s.appearance)
   const resolvedAppearance = useAppearanceStore((s) => s.resolvedAppearance)
-  const themeProps = useAntdTheme(resolvedAppearance)
+  const themeProps = useAntdTheme(appearance, resolvedAppearance)
 
   return (
     <ConfigProvider locale={zhCN} {...themeProps}>
