@@ -69,7 +69,7 @@ export function WorkflowGuideCard({ onStartTour }: Props) {
           分享流程
         </Button>
         <Button
-          type="text"
+          type="primary"
           size="small"
           shape="round"
           icon={<EditOutlined />}
