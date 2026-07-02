@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   App,
   BorderBeam,
@@ -89,6 +89,20 @@ export function NewTaskPage() {
   const modelPickerRef = useRef<HTMLDivElement>(null)
   const workDirRef = useRef<HTMLDivElement>(null)
   const guideCardRef = useRef<HTMLDivElement>(null)
+
+  /* Typewriter */
+  const heroText = '用自然语言搞定空间智能工作流'
+  const [typedIndex, setTypedIndex] = useState(0)
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    if (mq.matches) {
+      setTypedIndex(heroText.length)
+      return
+    }
+    if (typedIndex >= heroText.length) return
+    const timer = setTimeout(() => setTypedIndex((prev) => prev + 1), 100)
+    return () => clearTimeout(timer)
+  }, [typedIndex, heroText.length])
 
   const handleSend = () => {
     if (!prompt.trim()) {
@@ -239,7 +253,13 @@ export function NewTaskPage() {
         </svg>
 
         <Title level={2} className={styles.heroTitle} style={{ color: token.colorText }}>
-          用自然语言搞定空间智能工作流
+          {heroText.slice(0, typedIndex)}
+          <span
+            className={typedIndex < heroText.length ? styles.typewriterCursor : ''}
+            style={{ color: token.colorPrimary, fontWeight: 400 }}
+          >
+            {typedIndex < heroText.length ? '▎' : ''}
+          </span>
         </Title>
         <Text type="secondary" className={styles.heroSubtitle}>
           用自然语言连接数据、地图、模型与工具，完成可追溯的 GIS 分析。
