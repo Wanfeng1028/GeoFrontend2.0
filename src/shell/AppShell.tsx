@@ -54,7 +54,7 @@ type SidebarSegment = 'tasks' | 'channels'
 const navItems = [
   { key: '/new-task', icon: <PlusOutlined />, label: '新任务' },
   { key: '/tasks', icon: <ClockCircleOutlined />, label: '定时任务' },
-  { key: '/data-center', icon: <MobileOutlined />, label: '移动端控制' },
+  { key: '/mobile-control', icon: <MobileOutlined />, label: '移动端控制' },
 ]
 
 /* 路由 → 已在当前页时的提示文案 */
@@ -62,6 +62,7 @@ const alreadyHereMap: Record<string, string> = {
   '/new-task': '当前已在新任务页面',
   '/tasks': '当前已在任务页面',
   '/agent-studio': '当前已在 Agent Studio',
+  '/mobile-control': '当前已在移动端控制页面',
   '/data-center': '当前已在数据中心',
   '/settings': '当前已在设置页面',
 }
@@ -139,7 +140,7 @@ export function AppShell() {
     } else {
       navigate(key)
     }
-    if (key === '/data-center') {
+    if (key === '/mobile-control') {
       setSegment('channels')
     }
   }
