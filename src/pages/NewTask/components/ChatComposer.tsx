@@ -7,6 +7,7 @@ import {
   Space,
   Tag,
   Tooltip,
+  Typography,
   theme,
 } from 'antd'
 import {
@@ -391,7 +392,7 @@ export function ChatComposer({
 
         <Input.TextArea
           className={styles.textArea}
-          placeholder="生成专题图、查询遥感数据……"
+          placeholder="描述你的 GIS 任务……"
           value={prompt}
           onChange={(e) => onPromptChange(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -458,6 +459,15 @@ export function ChatComposer({
           />
         )}
       </div>
+
+      {/* 提示行 */}
+      {!prompt && (
+        <div className={styles.hintRow}>
+          <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+            例如：分析地块缓冲区、生成专题图、查询遥感数据……
+          </Typography.Text>
+        </div>
+      )}
     </div>
   )
 }

@@ -29,6 +29,10 @@
   padding: 4px 0 0;
 }
 
+.hintRow {
+  padding: 2px 44px 0;
+}
+
 .iconBtn {
   width: 28px;
   height: 28px;
