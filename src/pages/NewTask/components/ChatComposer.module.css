@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 1200px;
+  max-width: 720px;
   border-radius: 16px;
   padding: 6px 8px;
   gap: 2px;
@@ -20,6 +20,7 @@
 .textArea {
   flex: 1;
   min-width: 0;
+  line-height: 1.6;
 }
 
 .attachTags {
@@ -31,6 +32,12 @@
 
 .hintRow {
   padding: 2px 44px 0;
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  padding: 2px 8px 0;
 }
 
 .iconBtn {
@@ -50,7 +57,7 @@
 
 /* ── 对话态 composer 固定在底部 ── */
 .composerConversation {
-  max-width: 1200px;
+  max-width: 860px;
   margin: 0 auto;
   border-radius: 16px;
 }

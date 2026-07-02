@@ -422,12 +422,6 @@ export function ChatComposer({
 
         <ModelPicker model={model} onModelChange={onModelChange} />
 
-        <Dropdown menu={workDirMenu} trigger={['click']} placement="topLeft" getPopupContainer={() => document.body}>
-          <Tooltip title={workDir ? `工作目录：${workDir}` : '选择工作目录'}>
-            <Button type="text" size="small" icon={<FolderOpenOutlined />} shape="round" className={styles.iconBtn} />
-          </Tooltip>
-        </Dropdown>
-
         <Tooltip title={recording ? '停止录音' : '语音输入'}>
           <Button
             color={recording ? 'danger' : 'green'}
@@ -460,11 +454,19 @@ export function ChatComposer({
         )}
       </div>
 
+      {/* 元信息行：工作目录 */}
+      <div className={styles.metaRow}>
+        <Dropdown menu={workDirMenu} trigger={['click']} placement="topLeft" getPopupContainer={() => document.body}>
+          <Button type="text" size="small" icon={<FolderOpenOutlined />} shape="round">
+            {workDir ? workDir : '选择工作目录'}
+          </Button>
+        </Dropdown>
+      </div>
+
       {/* 提示行 */}
       {!prompt && (
         <div className={styles.hintRow}>
           <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-            例如：分析地块缓冲区、生成专题图、查询遥感数据……
           </Typography.Text>
         </div>
       )}

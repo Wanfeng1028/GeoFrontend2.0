@@ -13,7 +13,7 @@ import { WorkflowGuideCard } from './components/WorkflowGuideCard'
 import { ChatComposer } from './components/ChatComposer'
 import { ConversationMessageView } from './components/ConversationMessage'
 import { activeAdapter } from './components/streamAdapters'
-import type { ConversationMessage } from './components/conversationStorage'
+import type { ConversationMessage, RunStatus, ToolCallLog } from './components/conversationStorage'
 import { useAppearanceStore } from '../../shared/stores/appearanceStore'
 import styles from './NewTaskPage.module.css'
 
@@ -31,6 +31,7 @@ export function NewTaskPage() {
   const [workDir, setWorkDir] = useState<string | null>(null)
   const [messages, setMessages] = useState<ConversationMessage[]>([])
   const [isStreaming, setIsStreaming] = useState(false)
+  const [runStatus, setRunStatus] = useState<RunStatus>('idle')
 
   const hasConversation = messages.length > 0
   const abortRef = useRef<AbortController | null>(null)
@@ -50,6 +51,7 @@ export function NewTaskPage() {
       abortRef.current?.abort()
       setMessages([])
       setIsStreaming(false)
+      setRunStatus('idle')
       setPrompt('')
     }
 
@@ -112,6 +114,7 @@ export function NewTaskPage() {
     setMessages((prev) => [...prev, userMsg, assistantMsg])
     setPrompt('')
     setIsStreaming(true)
+    setRunStatus('thinking')
 
     /* 启动 mock streaming */
     const controller = new AbortController()
@@ -135,6 +138,32 @@ export function NewTaskPage() {
             ),
           )
         },
+        onStatus: (status: RunStatus) => {
+          setRunStatus(status)
+        },
+        onToolCall: (log: ToolCallLog) => {
+          setMessages((prev) =>
+            prev.map((m) => {
+              if (m.id !== assistantMsg.id) return m
+              const existing = m.toolCalls ?? []
+              const idx = existing.findIndex((t) => t.id === log.id)
+              if (idx >= 0) {
+                /* 同 id 合并更新 */
+                const updated = [...existing]
+                updated[idx] = log
+                return { ...m, toolCalls: updated }
+              }
+              return { ...m, toolCalls: [...existing, log] }
+            }),
+          )
+        },
+        onWorkflow: (steps) => {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantMsg.id ? { ...m, workflow: steps } : m,
+            ),
+          )
+        },
         onDone: () => {
           setMessages((prev) =>
             prev.map((m) =>
@@ -142,9 +171,9 @@ export function NewTaskPage() {
             ),
           )
           setIsStreaming(false)
-          message.success('任务已进入前端队列，后续将接入真实执行流程')
         },
         onError: (error) => {
+          setRunStatus('failed')
           setMessages((prev) =>
             prev.map((m) =>
               m.id === assistantMsg.id
@@ -162,6 +191,7 @@ export function NewTaskPage() {
   /* ── 停止生成 ── */
   const handleStop = () => {
     abortRef.current?.abort()
+    setRunStatus('stopped')
     setMessages((prev) =>
       prev.map((m) =>
         m.status === 'streaming'
@@ -171,6 +201,21 @@ export function NewTaskPage() {
     )
     setIsStreaming(false)
     message.info('已停止生成')
+  }
+
+  /* ── 确认执行 ── */
+  const handleConfirmRun = () => {
+    setRunStatus('running')
+    message.info('GeoWork 已开始前端模拟执行')
+    window.setTimeout(() => {
+      setRunStatus('completed')
+      message.success('工作流已完成前端模拟执行')
+    }, 1000)
+  }
+
+  /* ── 调整计划 ── */
+  const handleAdjustPlan = () => {
+    message.info('计划调整功能后续接入')
   }
 
   /* ── 清理 ── */
@@ -260,16 +305,50 @@ export function NewTaskPage() {
             {model} · {workDir ?? '未选择目录'}
           </Text>
           {isStreaming && (
-            <Tag icon={<LoadingOutlined />} color="processing">思考中</Tag>
+            <Tag icon={<LoadingOutlined />} color="processing">
+              {runStatus === 'thinking' ? '理解任务' : runStatus === 'planning' ? '生成计划' : '思考中'}
+            </Tag>
+          )}
+          {!isStreaming && runStatus === 'waiting-confirmation' && (
+            <Tag color="warning">等待确认</Tag>
+          )}
+          {!isStreaming && runStatus === 'running' && (
+            <Tag icon={<LoadingOutlined />} color="processing">执行中</Tag>
+          )}
+          {!isStreaming && runStatus === 'completed' && (
+            <Tag color="success">已完成</Tag>
+          )}
+          {!isStreaming && runStatus === 'stopped' && (
+            <Tag>已停止</Tag>
+          )}
+          {!isStreaming && runStatus === 'failed' && (
+            <Tag color="error">失败</Tag>
           )}
         </div>
       </div>
 
       {/* Message List */}
       <div className={styles.messageList} ref={messageListRef}>
-        {messages.map((msg) => (
-          <ConversationMessageView key={msg.id} data={msg} />
-        ))}
+        {messages.map((msg, idx) => {
+          /* 找到最后一条 assistant message 的索引 */
+          let lastAssistantIdx = -1
+          for (let i = messages.length - 1; i >= 0; i--) {
+            if (messages[i].role === 'assistant') {
+              lastAssistantIdx = i
+              break
+            }
+          }
+          return (
+            <ConversationMessageView
+              key={msg.id}
+              data={msg}
+              runStatus={idx === lastAssistantIdx ? runStatus : undefined}
+              onConfirmRun={idx === lastAssistantIdx ? handleConfirmRun : undefined}
+              onAdjustPlan={idx === lastAssistantIdx ? handleAdjustPlan : undefined}
+              isLastAssistant={idx === lastAssistantIdx}
+            />
+          )
+        })}
       </div>
 
       {/* Composer */}
