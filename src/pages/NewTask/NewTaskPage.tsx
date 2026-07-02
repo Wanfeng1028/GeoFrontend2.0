@@ -3,10 +3,12 @@ import { useLocation } from 'react-router'
 import {
   App,
   BorderBeam,
+  Tag,
   Tour,
   Typography,
   theme,
 } from 'antd'
+import { LoadingOutlined } from '@ant-design/icons'
 import { WorkflowGuideCard } from './components/WorkflowGuideCard'
 import { ChatComposer } from './components/ChatComposer'
 import { ConversationMessageView } from './components/ConversationMessage'
@@ -34,17 +36,30 @@ export function NewTaskPage() {
   const abortRef = useRef<AbortController | null>(null)
   const messageListRef = useRef<HTMLDivElement>(null)
 
-  /* ── initialPrompt 兼容 ── */
+  /* ── location state 兼容（initialPrompt + resetKey） ── */
   const location = useLocation()
   const promptFilledRef = useRef(false)
+  const lastResetKeyRef = useRef<number | null>(null)
+
   useEffect(() => {
-    const initialPrompt = (location.state as { initialPrompt?: string } | null)?.initialPrompt
-    if (initialPrompt && !promptFilledRef.current) {
+    const state = location.state as { initialPrompt?: string; resetKey?: number } | null
+
+    /* resetKey：侧栏"新任务"点击时重置会话 */
+    if (state?.resetKey && state.resetKey !== lastResetKeyRef.current) {
+      lastResetKeyRef.current = state.resetKey
+      abortRef.current?.abort()
+      setMessages([])
+      setIsStreaming(false)
+      setPrompt('')
+    }
+
+    /* initialPrompt：定时任务页面传入的提示词 */
+    if (state?.initialPrompt && !promptFilledRef.current) {
       setPrompt((prev) => {
         if (prev === '') {
           promptFilledRef.current = true
           message.success('已生成定时任务提示词，请继续补充细节')
-          return initialPrompt
+          return state.initialPrompt!
         }
         return prev
       })
@@ -244,6 +259,9 @@ export function NewTaskPage() {
           <Text type="secondary" style={{ fontSize: 12 }}>
             {model} · {workDir ?? '未选择目录'}
           </Text>
+          {isStreaming && (
+            <Tag icon={<LoadingOutlined />} color="processing">思考中</Tag>
+          )}
         </div>
       </div>
 
@@ -273,7 +291,12 @@ export function NewTaskPage() {
   )
 
   return (
-    <div className={styles.root}>
+    <div
+      className={styles.root}
+      style={{
+        background: `linear-gradient(180deg, ${token.colorPrimaryBg} 0%, ${token.colorBgLayout} 50%)`,
+      }}
+    >
       {hasConversation ? conversationView : homeView}
 
       {/* Tour */}
