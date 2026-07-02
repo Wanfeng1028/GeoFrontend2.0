@@ -294,7 +294,7 @@ export function NewTaskPage() {
     <div
       className={styles.root}
       style={{
-        background: `linear-gradient(180deg, ${token.colorPrimaryBg} 0%, ${token.colorBgLayout} 50%)`,
+        background: `linear-gradient(180deg, ${token.colorPrimaryBgHover} 0%, ${token.colorBgLayout} 50%)`,
       }}
     >
       {hasConversation ? conversationView : homeView}
