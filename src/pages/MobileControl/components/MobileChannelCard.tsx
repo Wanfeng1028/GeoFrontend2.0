@@ -41,7 +41,12 @@ export function MobileChannelCard({ channel, onConfig, onToggle, onRebind }: Mob
   const { token } = theme.useToken()
   const { message, modal } = App.useApp()
 
-  const statusInfo = statusMap[channel.status]
+  const statusInfo = (() => {
+    if (channel.status === 'connected' && !channel.enabled) {
+      return { label: '已停用', color: 'warning' }
+    }
+    return statusMap[channel.status]
+  })()
 
   const moreMenuItems: MenuProps['items'] = [
     {
