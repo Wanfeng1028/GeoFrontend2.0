@@ -50,6 +50,49 @@ type DirectoryPickerWindow = Window & {
   }) => Promise<GeoWorkDirectoryHandle>
 }
 
+/* Web Speech API 类型声明 */
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList
+  resultIndex: number
+}
+
+interface SpeechRecognitionResultList {
+  length: number
+  item(index: number): SpeechRecognitionResult
+  [index: number]: SpeechRecognitionResult
+}
+
+interface SpeechRecognitionResult {
+  isFinal: boolean
+  length: number
+  item(index: number): SpeechRecognitionAlternative
+  [index: number]: SpeechRecognitionAlternative
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string
+  confidence: number
+}
+
+interface SpeechRecognitionInstance extends EventTarget {
+  continuous: boolean
+  interimResults: boolean
+  lang: string
+  start(): void
+  stop(): void
+  abort(): void
+  onresult: ((event: SpeechRecognitionEvent) => void) | null
+  onerror: ((event: Event & { error: string }) => void) | null
+  onend: (() => void) | null
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition?: new () => SpeechRecognitionInstance
+    webkitSpeechRecognition?: new () => SpeechRecognitionInstance
+  }
+}
+
 const MODE_OPTIONS = [
   { key: 'general', label: '通用 GIS', icon: <GlobalOutlined />, desc: '通用地理信息系统任务' },
   { key: 'spatial', label: '空间分析', icon: <AimOutlined />, desc: '缓冲区、叠加、空间查询' },
@@ -80,6 +123,10 @@ export function NewTaskPage() {
   const [model, setModel] = useState('Auto')
   const [workDir, setWorkDir] = useState<string | null>(null)
   const [focused, setFocused] = useState(false)
+
+  /* 语音输入 */
+  const [recording, setRecording] = useState(false)
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null)
 
   /* Tour */
   const [tourOpen, setTourOpen] = useState(false)
@@ -124,6 +171,58 @@ export function NewTaskPage() {
       e.preventDefault()
       handleSend()
     }
+  }
+
+  /* 语音输入：Web Speech API */
+  const toggleVoiceInput = () => {
+    if (recording) {
+      recognitionRef.current?.stop()
+      return
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+    if (!SpeechRecognition) {
+      message.warning('当前浏览器不支持语音输入，请使用 Chrome 或 Edge')
+      return
+    }
+
+    const recognition = new SpeechRecognition()
+    recognition.continuous = true
+    recognition.interimResults = true
+    recognition.lang = 'zh-CN'
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      let finalTranscript = ''
+      let interimTranscript = ''
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i]
+        if (result.isFinal) {
+          finalTranscript += result[0].transcript
+        } else {
+          interimTranscript += result[0].transcript
+        }
+      }
+      if (finalTranscript) {
+        setPrompt((prev) => (prev ? prev + ' ' : '') + finalTranscript)
+      }
+    }
+
+    recognition.onerror = (event) => {
+      if (event.error === 'not-allowed') {
+        message.error('麦克风权限被拒绝，请在浏览器设置中允许麦克风访问')
+      } else if (event.error !== 'aborted') {
+        message.error('语音识别出错，请稍后重试')
+      }
+      setRecording(false)
+    }
+
+    recognition.onend = () => {
+      setRecording(false)
+    }
+
+    recognitionRef.current = recognition
+    recognition.start()
+    setRecording(true)
   }
 
   /* 加号菜单 */
@@ -332,14 +431,14 @@ export function NewTaskPage() {
                 <ModelPicker model={model} onModelChange={setModel} />
               </div>
 
-              <Tooltip title="语音输入">
+              <Tooltip title={recording ? '停止录音' : '语音输入'}>
                 <Button
-                  color="green"
+                  color={recording ? 'danger' : 'green'}
                   variant="filled"
                   shape="round"
                   icon={<AudioOutlined />}
                   className={styles.iconBtn}
-                  onClick={() => message.info('语音输入后续接入')}
+                  onClick={toggleVoiceInput}
                 />
               </Tooltip>
 
