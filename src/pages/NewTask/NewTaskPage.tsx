@@ -260,73 +260,63 @@ export function NewTaskPage() {
                 : token.boxShadow,
             }}
           >
-            <Input.TextArea
-              className={styles.composerTextarea}
+            <Dropdown menu={attachMenu} trigger={['click']} placement="topLeft">
+              <Tooltip title="添加附件">
+                <Button color="primary" variant="solid" icon={<PlusOutlined />} size="small" shape="round" className={styles.iconBtn} />
+              </Tooltip>
+            </Dropdown>
+
+            <Input
+              className={styles.composerInput}
               placeholder="描述你的 GIS 任务，例如：分析地块缓冲区、生成专题图、查询遥感数据……"
-              autoSize={{ minRows: 2, maxRows: 5 }}
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               onKeyDown={handleKeyDown}
               onFocus={() => setFocused(true)}
               onBlur={() => setFocused(false)}
               variant="borderless"
-              style={{ fontSize: 14, padding: '10px 14px' }}
+              style={{ fontSize: 14 }}
             />
 
-            {/* 工具栏 */}
-            <div
-              ref={toolbarRef}
-              className={styles.toolbar}
-              style={{ borderTop: `1px solid ${token.colorBorderSecondary}` }}
-            >
-              <div className={styles.toolbarLeft}>
-                <Dropdown menu={attachMenu} trigger={['click']} placement="topLeft">
-                  <Tooltip title="添加附件">
-                    <Button color="primary" variant="solid" icon={<PlusOutlined />} size="small" shape="round" className={styles.iconBtn} />
-                  </Tooltip>
-                </Dropdown>
+            <div ref={toolbarRef} className={styles.composerActions}>
+              <Dropdown
+                dropdownRender={modeDropdownRender}
+                trigger={['click']}
+                placement="topLeft"
+                open={modeDropdownOpen}
+                onOpenChange={setModeDropdownOpen}
+              >
+                <Button ref={modeBtnRef} color="primary" variant="solid" size="small" shape="round" className={styles.modeBtn}>
+                  <Space size={4}>
+                    <ThunderboltOutlined />
+                    {mode}
+                  </Space>
+                </Button>
+              </Dropdown>
 
-                <Dropdown
-                  dropdownRender={modeDropdownRender}
-                  trigger={['click']}
-                  placement="topLeft"
-                  open={modeDropdownOpen}
-                  onOpenChange={setModeDropdownOpen}
-                >
-                  <Button ref={modeBtnRef} color="primary" variant="solid" size="small" shape="round" className={styles.modeBtn}>
-                    <Space size={4}>
-                      <ThunderboltOutlined />
-                      {mode}
-                    </Space>
-                  </Button>
-                </Dropdown>
+              <div ref={modelPickerRef}>
+                <ModelPicker model={model} onModelChange={setModel} />
               </div>
 
-              <div className={styles.toolbarRight}>
-                <div ref={modelPickerRef}>
-                  <ModelPicker model={model} onModelChange={setModel} />
-                </div>
-
-                <Tooltip title="语音输入">
-                  <Button
-                    color="green"
-                    variant="filled"
-                    shape="round"
-                    icon={<AudioOutlined />}
-                    className={styles.iconBtn}
-                    onClick={() => message.info('语音输入后续接入')}
-                  />
-                </Tooltip>
-
+              <Tooltip title="语音输入">
                 <Button
-                  color="primary"
-                  variant="solid"
-                  shape="circle"
-                  icon={<SendOutlined />}
+                  color="green"
+                  variant="filled"
+                  shape="round"
+                  icon={<AudioOutlined />}
                   className={styles.iconBtn}
-                  onClick={handleSend}
+                  onClick={() => message.info('语音输入后续接入')}
                 />
-              </div>
+              </Tooltip>
+
+              <Button
+                color="primary"
+                variant="solid"
+                shape="circle"
+                icon={<SendOutlined />}
+                className={styles.iconBtn}
+                onClick={handleSend}
+              />
             </div>
           </div>
         )
