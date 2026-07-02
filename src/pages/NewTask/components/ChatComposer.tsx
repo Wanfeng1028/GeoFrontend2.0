@@ -367,7 +367,7 @@ export function ChatComposer({
     >
       {/* 附件标签 */}
       {attachments.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, padding: '8px 12px 0' }}>
+        <div className={styles.attachTags}>
           {attachments.map((name, idx) => (
             <Tag
               key={idx}
@@ -381,31 +381,30 @@ export function ChatComposer({
         </div>
       )}
 
-      {/* TextArea */}
-      <Input.TextArea
-        className={styles.textArea}
-        placeholder="描述你的 GIS 任务，例如：分析地块缓冲区、生成专题图、查询遥感数据……"
-        value={prompt}
-        onChange={(e) => onPromptChange(e.target.value)}
-        onKeyDown={handleKeyDown}
-        onCompositionStart={() => { composingRef.current = true }}
-        onCompositionEnd={() => { composingRef.current = false }}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        variant="borderless"
-        autoSize={{ minRows: 1, maxRows: 8 }}
-        style={{ fontSize: 14, resize: 'none' }}
-      />
+      {/* 主行：[+] TextArea [actions] */}
+      <div className={styles.composerRow}>
+        <Dropdown menu={attachMenu} trigger={['click']} placement="topLeft">
+          <Tooltip title="添加附件">
+            <Button color="primary" variant="solid" icon={<PlusOutlined />} size="small" shape="circle" className={styles.iconBtn} />
+          </Tooltip>
+        </Dropdown>
 
-      {/* Toolbar */}
-      <div className={styles.toolbar}>
-        <div className={styles.toolbarLeft}>
-          <Dropdown menu={attachMenu} trigger={['click']} placement="topLeft">
-            <Tooltip title="添加附件">
-              <Button color="primary" variant="solid" icon={<PlusOutlined />} size="small" shape="circle" className={styles.iconBtn} />
-            </Tooltip>
-          </Dropdown>
+        <Input.TextArea
+          className={styles.textArea}
+          placeholder="描述你的 GIS 任务，例如：分析地块缓冲区、生成专题图、查询遥感数据……"
+          value={prompt}
+          onChange={(e) => onPromptChange(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onCompositionStart={() => { composingRef.current = true }}
+          onCompositionEnd={() => { composingRef.current = false }}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          variant="borderless"
+          autoSize={{ minRows: 1, maxRows: 8 }}
+          style={{ fontSize: 14, resize: 'none' }}
+        />
 
+        <div className={styles.toolbarActions}>
           <Dropdown
             dropdownRender={modeDropdownRender}
             trigger={['click']}
@@ -428,9 +427,7 @@ export function ChatComposer({
               <Button type="text" size="small" icon={<FolderOpenOutlined />} shape="round" className={styles.iconBtn} />
             </Tooltip>
           </Dropdown>
-        </div>
 
-        <div className={styles.toolbarRight}>
           <Tooltip title={recording ? '停止录音' : '语音输入'}>
             <Button
               color={recording ? 'danger' : 'green'}

@@ -3,11 +3,17 @@
   flex-direction: column;
   width: 100%;
   max-width: 820px;
-  border-radius: 16px;
-  padding: 8px 12px;
-  gap: 8px;
+  border-radius: 28px;
+  padding: 6px 8px 6px 6px;
+  gap: 4px;
   box-sizing: border-box;
   transition: box-shadow 0.2s ease;
+}
+
+.composerRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
 }
 
 .textArea {
@@ -15,25 +21,18 @@
   min-width: 0;
 }
 
-.toolbar {
+.attachTags {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
   flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px 8px 0;
 }
 
-.toolbarLeft {
+.toolbarActions {
   display: flex;
   align-items: center;
   gap: 4px;
-}
-
-.toolbarRight {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .iconBtn {
@@ -55,7 +54,7 @@
 .composerConversation {
   max-width: 860px;
   margin: 0 auto;
-  border-radius: 16px;
+  border-radius: 28px;
 }
 
 /* ── Mode Card Dropdown ── */
