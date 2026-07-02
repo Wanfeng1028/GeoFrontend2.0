@@ -381,8 +381,8 @@ export function ChatComposer({
         </div>
       )}
 
-      {/* 输入行：[+] TextArea */}
-      <div className={styles.inputRow}>
+      {/* 单行：[+] TextArea [mode] [model] [folder] [voice] [send] */}
+      <div className={styles.composerRow}>
         <Dropdown menu={attachMenu} trigger={['click']} placement="topLeft">
           <Tooltip title="添加附件">
             <Button color="primary" variant="solid" icon={<PlusOutlined />} size="small" shape="circle" className={styles.iconBtn} />
@@ -403,10 +403,7 @@ export function ChatComposer({
           autoSize={{ minRows: 1, maxRows: 8 }}
           style={{ fontSize: 14, resize: 'none' }}
         />
-      </div>
 
-      {/* 工具栏行 */}
-      <div className={styles.toolbarRow}>
         <Dropdown
           dropdownRender={modeDropdownRender}
           trigger={['click']}
