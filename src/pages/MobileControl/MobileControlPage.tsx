@@ -47,9 +47,7 @@ const INITIAL_CHANNELS: ChannelData[] = [
     name: '微信',
     description: '通过微信消息接收任务提醒和快速操作链接',
     icon: <WechatOutlined />,
-    status: 'failed',
-    errorMessage: '移动端登录已过期，请重新扫码绑定',
-    enabled: false,
+    status: 'unconfigured',
   },
   {
     key: 'dingtalk',
