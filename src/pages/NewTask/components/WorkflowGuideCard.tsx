@@ -19,7 +19,7 @@ export function WorkflowGuideCard({ onStartTour }: Props) {
     <Card
       className={styles.card}
       style={{
-        background: `linear-gradient(180deg, ${token.colorPrimaryBg}, ${token.colorFillQuaternary})`,
+        background: `linear-gradient(180deg, ${token.colorPrimaryBgHover}, ${token.colorFillTertiary})`,
         border: `1px solid ${token.colorBorderSecondary}`,
       }}
       styles={{ body: { padding: '20px 24px' } }}

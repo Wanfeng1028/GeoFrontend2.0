@@ -356,7 +356,12 @@ export function NewTaskPage() {
   }
 
   return (
-    <div className={styles.root}>
+    <div
+      className={styles.root}
+      style={{
+        background: `linear-gradient(180deg, ${token.colorPrimaryBgHover} 0%, ${token.colorBgLayout} 45%)`,
+      }}
+    >
       {/* ── Hero ── */}
       <div className={styles.hero}>
         <svg
